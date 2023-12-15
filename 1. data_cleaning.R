@@ -4,7 +4,6 @@
 library(tidyverse)
 library(rio) # kun je alles mee openen zonder te definieren wat voor bestand het is
 library(ggsci) # voor kleurensets van de lancet, nejm en jama
-library(mixOmics)
 library(ggpubr) # voor statistiek bij plots
 library(vegan) # voor diversiteitsindices
 library(dplyr)
@@ -15,7 +14,7 @@ library(phyloseq) # voor handling van phyloseq object
 otu <- rio::import("data/HELUIS.Verhaar.2023.otu_table.csv", header = TRUE)
 rownames(otu) <- otu[,1]
 otu <- otu[,-1]
-tax <- rio::import("data/HELUIS.Verhaar.2023.tax_table.csv", header = TRUE)
+tax <- rio::import("Data/HELUIS.Verhaar.2023.tax_table.csv", header = TRUE)
 rownames(tax) <- tax$V1
 tax$V1 <- NULL
 tax <- as.matrix(tax)
@@ -76,7 +75,6 @@ saveRDS(tax, file = "data/tax_table.RDS")
 df <- haven::read_sav("data/231109_HELIUS data Barbara Verhaar.sav")
 
 # Change type of variable 
-# commment: mutate_at was superseded in dplyr 
 yesnosmall <- function(x) xnew = fct_recode(as_factor(x, levels=c("labels")), "No"="nee", "Yes"="ja")
 yesnocaps <- function(x) xnew = fct_recode(as_factor(x, levels=c("labels")), "No"="Nee", "Yes"="Ja")
 
@@ -90,8 +88,8 @@ df_new <- df %>%
            BMI=H1_LO_BMI, WHR=H1_LO_WHR, SBP=H1_LO_GemBPSysZit, 
            DBP=H1_LO_GemBPDiaZit, HR=H1_LO_GemBPHRZit,
            # Cardiometabolic
-           HT=H1_HT_SelfBPMed, HT_SelfBP=H1_HT_BP, 
-           MetSyn=H1_MetSyn_MetabolicSyndrome, DM=H1_Diabetes_SelfGlucMed,
+           HT=H1_HT_BPMed, HT_SelfBP=H1_HT_SelfBP, 
+           MetSyn=H1_MetSyn_MetabolicSyndrome, DM=H1_Diabetes_GlucMed,
            FramRisk=H1_Fram_CVD, SCORENL=H1_SCORE_CVDmort_NL,
            # Lab
            TC = H1_Lab_UitslagCHOL, LDL=H1_Lab_uitslagRLDL, HDL=H1_Lab_UitslagHDLS, 
@@ -106,7 +104,7 @@ df_new <- df %>%
            Corticosteroids=H1_Corticosteroiden,SystSteroids=H1_SystSteroiden,
            Antithromb=H1_Antithrombotica,
            # Antihypertensive medication
-           AllAntiHT=H1_AntihypertensivaC02, Diuretics=H1_AntihypertensivaC03,
+           AllAntiHT=H1_Antihypertensiva, Diuretics=H1_AntihypertensivaC03,
            CalciumAnt=H1_AntihypertensivaC08, BetaBlocker=H1_AntihypertensivaC07,
            RAASi=H1_AntihypertensivaC09,
            # Fecal sample 
@@ -146,28 +144,42 @@ df_new <- df %>%
                    across(where(is.numeric), as.numeric) # all other vars to numeric, do this last
             ) %>% 
             droplevels(.)
-            
+
+# Create new variables
+df_new <- df_new %>%
+  mutate(MenopauseYn = case_when(
+    is.na(MenopauseAge) ~ "No",
+    TRUE ~ "Yes"
+  ))
+
+df_new <- df_new %>%
+  mutate(MenopauseDuration = case_when(
+    MenopauseYn == "Yes" ~ df_new$Age - df_new$MenopauseAge,
+    TRUE ~ NA_real_
+  ))
+
+
 ## Select ID's present in both dataframes
 sample_names_to_keep <- df$ID
 sample_names_to_keep <- as.character(sample_names_to_keep)
 heliusmb <- prune_samples(sample_names_to_keep, heliusmb)
 
 sample_ids <- colnames(otu_table(heliusmb))
-df <- df[df$ID %in% sample_ids, ]
+df_new <- df_new[df_new$ID %in% sample_ids, ]
 
-rownames(df) <- df$ID
-df <- df[,-1]
+rownames(df_new) <- df_new$ID
+df_new <- df_new[,-1]
 
 heliusmb@otu_table <- t(heliusmb@otu_table)
-p <- merge_phyloseq(heliusmb, df)
+heliusmbcomplete <- merge_phyloseq(heliusmb, df_new)
 
 
 ## Save files
-saveRDS(df, file = "data/clinicaldata.RDS")
-saveRDS(p, file = "data/phyloseq_sampledata.RDS")
+saveRDS(df_new, file = "data/clinicaldata.RDS")
+saveRDS(heliusmbcomplete, file = "data/phyloseq_sampledata.RDS")
 
 ####################### check missing heliusnrs
-heliusdata <- df[,1]
+heliusdata <- df_new[,1]
 heliusdata$ID <- as.character(heliusdata$ID)
 otudata <- as.data.frame(colnames(otu))
 colnames(otudata)[1] <- "ID"
