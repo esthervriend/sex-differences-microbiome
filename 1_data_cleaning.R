@@ -3,10 +3,6 @@
 ## Libraries
 library(tidyverse)
 library(rio) # kun je alles mee openen zonder te definieren wat voor bestand het is
-library(ggsci) # voor kleurensets van de lancet, nejm en jama
-library(ggpubr) # voor statistiek bij plots
-library(vegan) # voor diversiteitsindices
-library(dplyr)
 library(haven)
 library(phyloseq) # voor handling van phyloseq object
 
@@ -23,11 +19,12 @@ tree <- ape::read.tree("data/HELUIS.Verhaar.2023.phy_tree.tree")
 
 ## Make phyloseq
 heliusmb <- phyloseq(otu_table(otu, taxa_are_rows = T), tax_table(tax), phy_tree(tree))
+sample_names(heliusmb) <-str_c("S",sample_names(heliusmb)) # safeguard that sample names cannot be used as numeric in matrices
+sample_names(heliusmb)
 
 ## Inspect phyloseq object
 ntaxa(heliusmb)
 nsamples(heliusmb)
-sample_names(heliusmb)
 depth <- colSums(heliusmb@otu_table)
 all(depth == 14932)
 as.data.frame(as(heliusmb@otu_table, "matrix"))
@@ -78,6 +75,7 @@ df <- haven::read_sav("data/231109_HELIUS data Barbara Verhaar.sav")
 yesnosmall <- function(x) xnew = fct_recode(as_factor(x, levels=c("labels")), "No"="nee", "Yes"="ja")
 yesnocaps <- function(x) xnew = fct_recode(as_factor(x, levels=c("labels")), "No"="Nee", "Yes"="Ja")
 
+## Clean HELIUS dataframe
 df_new <- df %>% 
     dplyr::select(ID=Heliusnr, Age=H1_lft, Sex=H1_geslacht, Ethnicity=H1_EtnTotaal, 
            Smoking=H1_Roken, PackYears=H1_PackYears, Alcohol=H1_AlcoholJN, 
@@ -143,39 +141,44 @@ df_new <- df %>%
                                         labels = c('Low', 'Moderate', 'High')),
                    across(where(is.numeric), as.numeric), # all other vars to numeric, do this last,
                    MenopauseYn = case_when(
-                       is.na(MenopauseAge) ~ "No",
-                       TRUE ~ "Yes"
+                       is.na(MenopauseAge) & Sex == "Female" ~ "No",
+                       MenopauseAge == "Yes" ~ "Yes",
+                       .default = NA
                    ),
                    MenopauseDuration = case_when(
-                       MenopauseYn == "Yes" ~ df_new$Age - df_new$MenopauseAge,
-                       TRUE ~ NA_real_
-                   )
+                       MenopauseYn == "Yes" ~ Age - MenopauseAge,
+                       .default = NA
+                   ),
+                   ID = str_c("S", ID)
             ) %>% 
-            droplevels(.)
+            # remove unused levels
+            droplevels(.) %>% 
+            # filter out all participants that used antibiotics at the moment of sample collection
+            filter(FecalSample_AB == "No") 
+dim(df_new)
 
-## Select ID's present in both dataframes
-sample_names_to_keep <- df$ID
+## Select IDs present in both dataframes
+sample_names_to_keep <- df_new$ID
 sample_names_to_keep <- as.character(sample_names_to_keep)
 heliusmb <- prune_samples(sample_names_to_keep, heliusmb)
 
 sample_ids <- colnames(otu_table(heliusmb))
 df_new <- df_new[df_new$ID %in% sample_ids, ]
-
+dim(df_new)
 rownames(df_new) <- df_new$ID
 df_new <- df_new[,-1]
 
 heliusmb@otu_table <- t(heliusmb@otu_table)
 heliusmbcomplete <- merge_phyloseq(heliusmb, df_new)
 
-
 ## Save files
 saveRDS(df_new, file = "data/clinicaldata.RDS")
 saveRDS(heliusmbcomplete, file = "data/phyloseq_sampledata.RDS")
 
-####################### check missing heliusnrs
-heliusdata <- df_new[,1]
-heliusdata$ID <- as.character(heliusdata$ID)
-otudata <- as.data.frame(colnames(otu))
-colnames(otudata)[1] <- "ID"
-
-join <- anti_join(otudata, heliusdata)
+# ####################### check missing heliusnrs
+# heliusdata <- df_new[,1]
+# heliusdata$ID <- as.character(heliusdata$ID)
+# otudata <- as.data.frame(colnames(otu))
+# colnames(otudata)[1] <- "ID"
+# 
+# join <- anti_join(otudata, heliusdata)
