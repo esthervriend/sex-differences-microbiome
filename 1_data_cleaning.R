@@ -142,9 +142,10 @@ df_new <- df %>%
                    across(where(is.numeric), as.numeric), # all other vars to numeric, do this last,
                    MenopauseYn = case_when(
                        is.na(MenopauseAge) & Sex == "Female" ~ "No",
-                       MenopauseAge == "Yes" ~ "Yes",
-                       .default = NA
+                       !is.na(MenopauseAge) ~ "Yes",
+                       .default = NA # for men
                    ),
+                   MenopauseYn = as.factor(MenopauseYn),
                    MenopauseDuration = case_when(
                        MenopauseYn == "Yes" ~ Age - MenopauseAge,
                        .default = NA
@@ -162,13 +163,10 @@ sample_names_to_keep <- df_new$ID
 sample_names_to_keep <- as.character(sample_names_to_keep)
 heliusmb <- prune_samples(sample_names_to_keep, heliusmb)
 
-sample_ids <- colnames(otu_table(heliusmb))
+sample_ids <- sample_names(heliusmb)
 df_new <- df_new[df_new$ID %in% sample_ids, ]
 dim(df_new)
 rownames(df_new) <- df_new$ID
-df_new <- df_new[,-1]
-
-heliusmb@otu_table <- t(heliusmb@otu_table)
 heliusmbcomplete <- merge_phyloseq(heliusmb, df_new)
 
 ## Save files
