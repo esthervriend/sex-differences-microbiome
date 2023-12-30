@@ -48,6 +48,10 @@ df_new <- rio:: import("data/clinicaldata.RDS")
 tab <- as.data.frame(t(as(phydata@otu_table, 'matrix')))
 tab_matrix <- t(as(phyloseq@otu_table, 'matrix'))
 
+## Output folder
+resultsfolder <- "results/ordination"
+dir.create(resultsfolder, showWarnings = FALSE)
+
 # Bray-Curtis PCoA
 bray <- vegan::vegdist(tab, method = 'bray')
 saveRDS(bray, 'data/braycurtis.RDS')
@@ -74,8 +78,8 @@ braycurt <- dbray %>%
         guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
         stat_ellipse(aes(color = Sex), type = "norm")
 
-ggsave(braycurt, "results/PCA_BrayCurtis.pdf", device = "pdf", width = 6, height = 5)
-ggsave(braycurt, "results/PCA_BrayCurtis.svg", device = "svg", width = 6, height = 5)
+ggsave(braycurt, "results/ordination/PCoA_BrayCurtis.pdf", device = "pdf", width = 6, height = 5)
+ggsave(braycurt, "results/ordination/PCoA_BrayCurtis.svg", device = "svg", width = 6, height = 5)
 
 ## PERMANOVA / adonis
 set.seed(1234)
@@ -103,7 +107,7 @@ planova <- dbray %>%
     stat_ellipse(aes(color = Sex), type = "norm")
 planova <- planova + annotate("text", x = 0.2, y = 0.4, label = paste0("PERMANOVA p = ", res$aov.tab[3,6]))
 
-ggsave(planova, "results/PCA_BrayCurtis_permanova.pdf", device = "pdf", width = 6, height = 5)
+ggsave(planova, "results/ordination/PCoA_BrayCurtis_permanova.pdf", device = "pdf", width = 6, height = 5)
 
 ## Weighted UniFrac
 wunifrac <- UniFrac(phydata, normalized = T, weighted = T, parallel = T)
@@ -130,7 +134,7 @@ pl <- dfpc %>%
     scale_color_manual(values = rev(pal_nejm()(2))) +
     guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
     stat_ellipse(aes(color = Sex), type = "norm")
-ggsave(pl, "results/PCoA_WeightedUnifrac.pdf", device = "pdf", width = 6, height = 5)
+ggsave(pl, "results/ordination/PCoA_WeightedUnifrac.pdf", device = "pdf", width = 6, height = 5)
 
 ## CLR-transformed PCA
 pseudocount <- 1
@@ -155,4 +159,4 @@ plclr <- dfclr %>%
     guides(fill = guide_legend(override.aes = list(shape = 21))) +
     ggtitle('PCA CLR-transformed') + 
     stat_ellipse(aes(color = Sex), type = "norm")
-ggsave(plclr, "results/PCA_CLR.pdf", device = "pdf", width = 6, height = 5)
+ggsave(plclr, "results/ordination/PCA_CLR.pdf", device = "pdf", width = 6, height = 5)

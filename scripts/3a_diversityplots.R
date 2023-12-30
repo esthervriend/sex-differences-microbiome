@@ -50,6 +50,10 @@ tab_matrix <- t(as(phydata@otu_table, 'matrix'))
 counts <- sample_sums(phydata@otu_table)
 counts # samples should all sum up to 14932
 
+## Output folder
+resultsfolder <- "results/alphadiversity"
+dir.create(resultsfolder, showWarnings = FALSE)
+
 ## Diversity metrics
 # Shannon plots
 shannon <- vegan::diversity(tab, index = 'shannon')
@@ -61,10 +65,10 @@ df_shan <- left_join(df_shan, df_new, by = "ID")
     geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
     stat_compare_means(label.y = 5.5) +
     theme_classic() + 
-    labs( y = "Shannon index", x="") + 
+    labs(title = "Shannon index", y = "Shannon index", x="") + 
     theme_Publication())
-ggsave("results/shannon.svg", width = 3, height = 5)
-ggsave("results/shannon.pdf", width = 3, height = 5)
+ggsave("results/alphadiversity/shannon.svg", width = 4, height = 5)
+ggsave("results/alphadiversity/shannon.pdf", width = 4, height = 5)
 
 ## Species richness
 specrich <- specnumber(tab)
@@ -76,9 +80,9 @@ dfspec <- left_join(dfspec, df_new, by = "ID")
             theme_Publication() + 
             scale_fill_manual(values = rev(pal_nejm()(2)), guide = FALSE) + 
             labs(title = "Species richness", y = "Number of species", x = "") +
-            stat_compare_means(method = "wilcox.test"))
-ggsave("results/richness.pdf", width = 3, height = 5)
-ggsave("results/richness.svg", width = 3, height = 5)
+            stat_compare_means(method = "wilcox.test", label.y = 1200))
+ggsave("results/alphadiversity/richness.pdf", width = 4, height = 5)
+ggsave("results/alphadiversity/richness.svg", width = 4, height = 5)
 
 ## Faith's PD
 faith <- picante::pd(samp = tab_matrix, tree = phydata@phy_tree)
@@ -92,9 +96,9 @@ dffai <- left_join(dffai, df_new, by = "ID")
             scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") + 
             labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
             stat_compare_means(method = "wilcox.test"))
-ggsave("results/faiths.pdf", device = "pdf", width = 4, height = 5)
-ggsave("results/faiths.svg", device = "svg", width = 4, height = 5)
+ggsave("results/alphadiversity/faiths.pdf", device = "pdf", width = 4, height = 5)
+ggsave("results/alphadiversity/faiths.svg", device = "svg", width = 4, height = 5)
 
 ggarrange(plshan, plrich, plfaith, labels = c("A", "B", "C"), nrow =1)
-ggsave("results/alphadivplots.pdf", width = 9, height = 5.5)
-ggsave("results/alphadivplots.svg", width = 9, height = 5.5)
+ggsave("results/alphadiversity/alphadivplots.pdf", width = 11, height = 5.5)
+ggsave("results/alphadiversity/alphadivplots.svg", width = 11, height = 5.5)
