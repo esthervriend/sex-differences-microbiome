@@ -197,23 +197,22 @@ plot_features_tests_class <- function(input_path, output_path, top_n=10, labels=
     y <- rio::import(file.path(input_path, 'y_binary.txt'))
     dd$y <- y$V1
     dd$y <- factor(ifelse(dd$y==1, labels[1],labels[2]))
+    dd$y <- forcats::fct_rev(dd$y)
     comps <- list(c(labels[1],labels[2]))
     for(j in 1:length(features_tk)){
         asv <- features_tk[j]
         df <- dd %>% dplyr::select(all_of(asv), y)
         names(df)[1] <- 'Feature'
-        df <- df %>% mutate(Feature = Feature / 200)
+        df <- df %>% mutate(Feature = log10(Feature+1))
         tax_asv <- tax$Tax[match(asv, tax$ASV)]
         pl <- ggplot(df, aes(x=y, y=Feature, fill=y))+
-            geom_violin(trim = TRUE) +
-            scale_fill_nejm(guide = FALSE)+
-            geom_boxplot(width=0.1, fill="white")+
+            geom_violin() +
+            scale_fill_manual(values = rev(pal_nejm()(2)), guide = FALSE)+
+            geom_boxplot(width=0.1, fill="white", outlier.shape = NA)+
             theme_Publication()+
             theme(legend.position = 'none')+
-            ggpubr::stat_compare_means(comparisons = comps, paired = F)+
-            xlab('Group')+
-            ylab('Relative abundance (%)')+
-            ggtitle(tax_asv)
+            ggpubr::stat_compare_means()+
+            labs(x = "", y = "Log10-transformed counts", title = tax_asv)
         fname <- tax_asv
         cat(j, fname, '\n')
         fname <- str_replace_all(fname, "[*\";,:/\\\\ ]","_")
@@ -272,20 +271,20 @@ plot_features_tests_top <- function(input_path, output_path, top_n=20, nrow=4, l
     y <- rio::import(file.path(input_path, 'y_binary.txt'))
     dd$y <- y$V1
     df <- dd %>% pivot_longer(-y, names_to = 'features', values_to = 'values')
-    df <- df %>% mutate(y = factor(y),
+    df$y <- factor(ifelse(df$y==1, labels[1],labels[2]))
+    df <- df %>% mutate(y = forcats::fct_rev(y),
                         features = as.factor(features),
                         features = fct_inorder(features),
-                        values = values / 200
+                        values = log10(values+1)
     )
-
     pl <- ggplot(df, aes(x=y, y=values))+
-        geom_violin(aes(fill=y), trim = TRUE)+
-        scale_fill_nejm(guide = FALSE) +
-        geom_boxplot(width=0.1, fill="white")+
+        geom_violin(aes(fill=y))+
+        scale_fill_manual(values = rev(pal_nejm()(2)), guide = FALSE)+
+        geom_boxplot(width=0.1, fill="white", outlier.shape = NA)+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance (%)')+
-        ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0))+
+        labs(x='', y = 'Log10-transformed counts')+
+        ggpubr::stat_compare_means(size = rel(3.0))+
         facet_wrap(~ features, nrow=nrow, scales = 'free')
     pl
     ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
