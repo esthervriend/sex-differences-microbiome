@@ -6,72 +6,96 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(vegan)
-library(rio)
+library(ggsci)
+
+theme_Publication <- function(base_size=14, base_family="sans") {
+    library(grid)
+    library(ggthemes)
+    library(stringr)
+    (theme_foundation(base_size=base_size, base_family=base_family)
+        + theme(plot.title = element_text(face = "bold",
+                                          size = rel(1.0), hjust = 0.5),
+                text = element_text(),
+                panel.background = element_rect(colour = NA),
+                plot.background = element_rect(colour = NA),
+                panel.border = element_rect(colour = NA),
+                axis.title = element_text(face = "bold",size = rel(0.8)),
+                axis.title.y = element_text(angle=90, vjust =2),
+                axis.title.x = element_text(vjust = -0.2),
+                axis.text = element_text(size = rel(0.7)),
+                axis.text.x = element_text(angle = 0), 
+                axis.line = element_line(colour="black"),
+                axis.ticks = element_line(),
+                panel.grid.major = element_line(colour="#f0f0f0"),
+                panel.grid.minor = element_blank(),
+                legend.key = element_rect(colour = NA),
+                legend.position = "bottom",
+                # legend.direction = "horizontal",
+                legend.key.size= unit(0.2, "cm"),
+                legend.spacing  = unit(0, "cm"),
+                # legend.title = element_text(face="italic"),
+                plot.margin=unit(c(10,5,5,5),"mm"),
+                strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+                strip.text = element_text(face="bold"),
+                plot.caption = element_text(size = rel(0.5), face = "italic")
+        ))
+    
+} 
 
 ## Load data
 phyloseq <- readRDS("data/phyloseq_sampledata.RDS")
 df_new <- rio:: import("data/clinicaldata.RDS")
-tax <- readRDS("data/tax_table.RDS")
-
-tab <- as(phyloseq@otu_table, 'matrix')
+tab <- as.data.frame(t(as(phyloseq@otu_table, 'matrix')))
 counts <- sample_sums(phyloseq@otu_table)
-tab <- as.data.frame(tab/sample_sums(phyloseq)*100)
-rowSums(tab) # samples should all sum up to 100%
+counts # samples should all sum up to 14932
 
 ## Diversity metrics
 # Shannon plots
 shannon <- vegan::diversity(tab, index = 'shannon')
-df_shan <- data.frame(ID = as.integer(names(shannon)), shannon = shannon)
-shanpl <- ggplot(df_shan, aes(x = shannon)) +
-    geom_histogram(color = "black", 
-                   fill = "royalblue", alpha = 0.8) + 
-    theme_classic() + 
-    theme(axis.text = element_text(color = "black", size = 16),
-          axis.title = element_text(color = "black", size = 16)) + 
-    xlab("Shannon index") 
-shanpl
-ggsave("results/shannon_index_hist.tiff")
-
+df_shan <- data.frame(ID = names(shannon), shannon = shannon)
 df_shan <- left_join(df_shan, df_new, by = "ID")
-shanviolin <- ggplot(data = df_shan, aes(x = Sex, y = shannon, fill = Sex)) +
+(shanviolin <- ggplot(data = df_shan, aes(x = Sex, y = shannon, fill = Sex)) +
     geom_violin() +
+    scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") +
     geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
+    stat_compare_means(label.y = 5.5) +
     theme_classic() + 
     labs( y = "Shannon index", x="") + 
-    theme(axis.text = element_text(color = "black", size = 16),
-      axis.title = element_text(color = "black", size = 16),
-      legend.text = element_text(color = "black", size = 16),
-      legend.title = element_text(color = "black", size = 16)) +
-    stat_compare_means(method = "wilcox.test", size = 5, label.x.npc = 0.31)
-shanviolin  
-ggsave("results/shannon.tiff", width = 6, height = 5)
+    theme_Publication())
+ggsave("results/shannon.svg", width = 6, height = 5)
+ggsave("results/shannon.pdf", width = 6, height = 5)
 
-
-## Ordination plots
-# Bray-Curtis PCoA
-bray <- vegan::vegdist(tab, method = 'bray')
-pcoord <- ape::pcoa(bray, correction = "cailliez")
-expl_variance <- pcoord$values$Rel_corr_eig * 100
-x_comp <- paste0('Axis.',1)
-y_comp <- paste0('Axis.',2)
-dbray <- pcoord$vectors[, c(x_comp, y_comp)]
-dbray <- as.data.frame(dbray)
-
-# add metadata / covariates
-dbray$ID <- as.integer(rownames(dbray))
-dbray <- left_join(dbray, df_new, by = 'ID')
-head(dbray)
-
-Braycurtis <- dbray %>% 
-    ggplot(aes(Axis.1, Axis.2)) +
-    scale_fill_nejm() +
-    geom_point(aes(color = group), size = 2) +
-    ggtitle("PCoA Bray-Curtis distance") +
-    xlab(paste0('PCo1 (', round(expl_variance[1], digits = 1),'%)')) +
-    ylab(paste0('PCo2 (', round(expl_variance[2], digits = 1),'%)')) +
+## Species richness
+specrich <- specnumber(tab)
+dfspec <- data.frame(ID = as.integer(names(richness)), richness = richness)
+specpl <- ggplot(dfspec, aes(x = specrich)) +
+    geom_histogram(color = "black", 
+                   fill = "darkgreen", alpha = 0.8) + 
     theme_Publication() +
-    scale_color_lancet() +
-    guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
-    stat_ellipse(aes(color = group), type = "norm")
-Braycurtis
-ggsave("results/PCA_BrayCurtis.pdf", device = "pdf", width = 6, height = 5)
+    xlab("Number of species") +
+    ggtitle("Species richness")
+ggsave("results/species_richness_hist.pdf")
+
+dfspec <- left_join(dfspec, ma, by = "ID")
+ggplot(data = dfveg, aes(x = Sex, y = richness, fill = Sex)) +
+    geom_violin()+
+    geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
+    theme_Publication() + 
+    scale_fill_lancet(guide = FALSE) + 
+    labs(title = "Species richness", y = "Number of species", x = "") +
+    stat_compare_means(method = "wilcox.test")
+ggsave("results/richness.pdf", device = "pdf", width = 6, height = 5)
+
+## Faith's PD
+faith <- picante::pd(tab@otu_table, tree = tab@phy_tree)
+dffai <- as.data.frame(faith)
+dffai$ID <- as.integer(rownames(faith))
+dffai <- left_join(dffai, ma, by = "ID")
+ggplot(data = dffai, aes(x = Sex, y = PD, fill = Sex)) +
+    geom_violin()+
+    geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
+    theme_Publication() + 
+    scale_fill_lancet(guide = "none") + 
+    labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
+    stat_compare_means(method = "wilcox.test")
+ggsave("results/faiths.pdf", device = "pdf", width = 4, height = 5)
