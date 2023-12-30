@@ -15,11 +15,10 @@ rownames(tax) <- tax$V1
 tax$V1 <- NULL
 tax <- as.matrix(tax)
 tree <- ape::read.tree("data/HELUIS.Verhaar.2023.phy_tree.tree")
-tree_rooted <- ape::root(tree)
 # sampledata <- rio::import("data/HELUIS.Verhaar.2023.sam_data.csv", header = TRUE) = empty
 
 ## Make phyloseq
-heliusmb <- phyloseq(otu_table(otu, taxa_are_rows = T), tax_table(tax), phy_tree(tree_rooted))
+heliusmb <- phyloseq(otu_table(otu, taxa_are_rows = T), tax_table(tax), phy_tree(tree))
 sample_names(heliusmb) <-str_c("S",sample_names(heliusmb)) # safeguard that sample names cannot be used as numeric in matrices
 sample_names(heliusmb)
 
