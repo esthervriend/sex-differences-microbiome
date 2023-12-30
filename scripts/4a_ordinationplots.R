@@ -106,7 +106,7 @@ planova <- planova + annotate("text", x = 0.2, y = 0.4, label = paste0("PERMANOV
 ggsave(planova, "results/PCA_BrayCurtis_permanova.pdf", device = "pdf", width = 6, height = 5)
 
 ## Weighted UniFrac
-wunifrac <- UniFrac(phydata, normalized = T, weighted = T)
+wunifrac <- UniFrac(phydata, normalized = T, weighted = T, parallel = T)
 saveRDS(wunifrac, "data/weighted_unifrac.RDS")
 pcoord <- ape::pcoa(wunifrac, correction = "cailliez")
 expl_variance <- pcoord$values$Rel_corr_eig * 100
