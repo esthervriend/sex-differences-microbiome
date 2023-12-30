@@ -1,12 +1,12 @@
-## Calculate distances and save
+## Calculate distances, plot PCoA and PCA
 
 ## Libraries
-library(phyloseq)
 library(vegan)
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(ggsci)
+library(phyloseq)
 
 theme_Publication <- function(base_size=14, base_family="sans") {
     library(grid)
@@ -44,9 +44,9 @@ theme_Publication <- function(base_size=14, base_family="sans") {
 
 ## Load data
 phydata <- readRDS("data/phyloseq_sampledata.RDS")
-df_new <- rio:: import("data/clinicaldata.RDS")
+df_new <- rio::import("data/clinicaldata.RDS")
 tab <- as.data.frame(t(as(phydata@otu_table, 'matrix')))
-tab_matrix <- t(as(phyloseq@otu_table, 'matrix'))
+tab_matrix <- t(as(phydata@otu_table, 'matrix'))
 
 ## Output folder
 resultsfolder <- "results/ordination"
@@ -84,10 +84,10 @@ ggsave(braycurt, "results/ordination/PCoA_BrayCurtis.svg", device = "svg", width
 ## PERMANOVA / adonis
 set.seed(1234)
 # distance matrix and metadata (df with the outcome / covariates) must have the same sample order as bray distance matrix / distance object
-all(df_new$sampleID == sample_names(tab)) # FALSE
+all(df_new$ID == sample_names(tab)) # FALSE
 dfanova <- df_new %>%
     slice(match(sample_names(tab), ID))
-all(dfanova$sampleID == sample_names(tab)) # TRUE
+all(dfanova$ID == sample_names(tab)) # TRUE
 dim(dfanova)
 names(dfanova)
 res <- adonis(bray ~ Sex, data = dfanova) # PERMANOVA
