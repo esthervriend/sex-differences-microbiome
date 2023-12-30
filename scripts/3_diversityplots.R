@@ -43,10 +43,11 @@ theme_Publication <- function(base_size=14, base_family="sans") {
 } 
 
 ## Load data
-phyloseq <- readRDS("data/phyloseq_sampledata.RDS")
+phydata <- readRDS("data/phyloseq_sampledata.RDS")
 df_new <- rio:: import("data/clinicaldata.RDS")
-tab <- as.data.frame(t(as(phyloseq@otu_table, 'matrix')))
-counts <- sample_sums(phyloseq@otu_table)
+tab <- as.data.frame(t(as(phydata@otu_table, 'matrix')))
+tab_matrix <- t(as(phydata@otu_table, 'matrix'))
+counts <- sample_sums(phydata@otu_table)
 counts # samples should all sum up to 14932
 
 ## Diversity metrics
@@ -54,7 +55,7 @@ counts # samples should all sum up to 14932
 shannon <- vegan::diversity(tab, index = 'shannon')
 df_shan <- data.frame(ID = names(shannon), shannon = shannon)
 df_shan <- left_join(df_shan, df_new, by = "ID")
-(shanviolin <- ggplot(data = df_shan, aes(x = Sex, y = shannon, fill = Sex)) +
+(plshan <- ggplot(data = df_shan, aes(x = Sex, y = shannon, fill = Sex)) +
     geom_violin() +
     scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") +
     geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
@@ -67,35 +68,33 @@ ggsave("results/shannon.pdf", width = 6, height = 5)
 
 ## Species richness
 specrich <- specnumber(tab)
-dfspec <- data.frame(ID = as.integer(names(richness)), richness = richness)
-specpl <- ggplot(dfspec, aes(x = specrich)) +
-    geom_histogram(color = "black", 
-                   fill = "darkgreen", alpha = 0.8) + 
-    theme_Publication() +
-    xlab("Number of species") +
-    ggtitle("Species richness")
-ggsave("results/species_richness_hist.pdf")
-
-dfspec <- left_join(dfspec, ma, by = "ID")
-ggplot(data = dfveg, aes(x = Sex, y = richness, fill = Sex)) +
-    geom_violin()+
-    geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
-    theme_Publication() + 
-    scale_fill_lancet(guide = FALSE) + 
-    labs(title = "Species richness", y = "Number of species", x = "") +
-    stat_compare_means(method = "wilcox.test")
-ggsave("results/richness.pdf", device = "pdf", width = 6, height = 5)
+dfspec <- data.frame(ID = names(specrich), richness = specrich)
+dfspec <- left_join(dfspec, df_new, by = "ID")
+(plrich <- ggplot(data = dfspec, aes(x = Sex, y = richness, fill = Sex)) +
+            geom_violin()+
+            geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
+            theme_Publication() + 
+            scale_fill_manual(values = rev(pal_nejm()(2)), guide = FALSE) + 
+            labs(title = "Species richness", y = "Number of species", x = "") +
+            stat_compare_means(method = "wilcox.test"))
+ggsave("results/richness.pdf", width = 6, height = 5)
+ggsave("results/richness.svg", width = 6, height = 5)
 
 ## Faith's PD
-faith <- picante::pd(tab@otu_table, tree = tab@phy_tree)
+faith <- picante::pd(samp = tab_matrix, tree = phydata@phy_tree)
 dffai <- as.data.frame(faith)
-dffai$ID <- as.integer(rownames(faith))
-dffai <- left_join(dffai, ma, by = "ID")
-ggplot(data = dffai, aes(x = Sex, y = PD, fill = Sex)) +
-    geom_violin()+
-    geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
-    theme_Publication() + 
-    scale_fill_lancet(guide = "none") + 
-    labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
-    stat_compare_means(method = "wilcox.test")
+dffai$ID <- rownames(faith)
+dffai <- left_join(dffai, df_new, by = "ID")
+(plfaith <- ggplot(data = dffai, aes(x = Sex, y = PD, fill = Sex)) +
+            geom_violin()+
+            geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
+            theme_Publication() + 
+            scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") + 
+            labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
+            stat_compare_means(method = "wilcox.test"))
 ggsave("results/faiths.pdf", device = "pdf", width = 4, height = 5)
+ggsave("results/faiths.svg", device = "svg", width = 4, height = 5)
+
+ggarrange(plshan, plrich, plfaith, labels = c("A", "B", "C"), nrow =1)
+ggsave("results/alphadivplots.pdf", width = 12, height = 5.5)
+ggsave("results/alphadivplots.svg", width = 12, height = 5.5)
