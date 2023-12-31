@@ -63,23 +63,9 @@ dbray <- pcoord$vectors[, c(x_comp, y_comp)]
 dbray <- as.data.frame(dbray)
 
 # add metadata / covariates
-dbray$ID <- as.integer(rownames(dbray))
+dbray$ID <- rownames(dbray)
 dbray <- left_join(dbray, df_new, by = 'ID')
 head(dbray)
-
-braycurt <- dbray %>% 
-        ggplot(aes(Axis.1, Axis.2)) +
-        geom_point(aes(color = Sex), size = 2) +
-        ggtitle("PCoA Bray-Curtis distance") +
-        xlab(paste0('PCo1 (', round(expl_variance[1], digits = 1),'%)')) +
-        ylab(paste0('PCo2 (', round(expl_variance[2], digits = 1),'%)')) +
-        scale_fill_manual(values = rev(pal_nejm()(2))) +
-        theme_Publication() +
-        guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
-        stat_ellipse(aes(color = Sex), type = "norm")
-
-ggsave(braycurt, "results/ordination/PCoA_BrayCurtis.pdf", device = "pdf", width = 6, height = 5)
-ggsave(braycurt, "results/ordination/PCoA_BrayCurtis.svg", device = "svg", width = 6, height = 5)
 
 ## PERMANOVA / adonis
 set.seed(1234)
@@ -89,27 +75,41 @@ dfanova <- df_new %>%
     slice(match(sample_names(tab), ID))
 all(dfanova$ID == sample_names(tab)) # TRUE
 dim(dfanova)
-names(dfanova)
-res <- adonis(bray ~ Sex, data = dfanova) # PERMANOVA
-print(res)
+names(dfanova)[1:5]
+res1 <- adonis(bray ~ Sex, data = dfanova) # PERMANOVA
+print(res1)
+res2 <- adonis(bray ~ MenopauseYn, data = dfanova) # PERMANOVA
+print(res2)
 
 ## Bray curtis plot with PERMANOVA annotation
-planova <- dbray %>% 
+braycurt <- dbray %>% 
     ggplot(aes(Axis.1, Axis.2)) +
-    scale_fill_nejm() +
     geom_point(aes(color = Sex), size = 2) +
+    ggtitle("PCoA Bray-Curtis distance") +
     xlab(paste0('PCo1 (', round(expl_variance[1], digits = 1),'%)')) +
     ylab(paste0('PCo2 (', round(expl_variance[2], digits = 1),'%)')) +
-    ggtitle("Bray curtis distance PCoA") +
+    scale_fill_manual(values = rev(pal_nejm()(2))) +
     theme_Publication() +
-    scale_color_manual(values = rev(pal_nejm()(2))) +
     guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
     stat_ellipse(aes(color = Sex), type = "norm")
-planova <- planova + annotate("text", x = 0.2, y = 0.4, label = paste0("PERMANOVA p = ", res$aov.tab[3,6]))
-
+planova <- braycurt + annotate("text", x = 0.2, y = 0.4, label = paste0("PERMANOVA p = ", res1$aov.tab[3,6]))
 ggsave(planova, "results/ordination/PCoA_BrayCurtis_permanova.pdf", device = "pdf", width = 6, height = 5)
 
-## Weighted UniFrac
+braycurt_meno <- dbray %>% 
+    filter(Sex == "Female") %>% 
+    ggplot(aes(Axis.1, Axis.2)) +
+    geom_point(aes(color = MenopauseYn), size = 2) +
+    ggtitle("PCoA Bray-Curtis distance") +
+    xlab(paste0('PCo1 (', round(expl_variance[1], digits = 1),'%)')) +
+    ylab(paste0('PCo2 (', round(expl_variance[2], digits = 1),'%)')) +
+    scale_fill_manual(values = pal_nejm()(4)[3:4]) +
+    theme_Publication() +
+    guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
+    stat_ellipse(aes(color = MenopauseYn), type = "norm")
+planova_meno <- braycurt_meno + annotate("text", x = 0.2, y = 0.4, label = paste0("PERMANOVA p = ", res2$aov.tab[3,6]))
+ggsave(planova_meno, "results/ordination/PCoA_BrayCurtis_permanova_meno.pdf", device = "pdf", width = 6, height = 5)
+
+#### Weighted UniFrac ####
 wunifrac <- UniFrac(phydata, normalized = T, weighted = T, parallel = T)
 saveRDS(wunifrac, "data/weighted_unifrac.RDS")
 pcoord <- ape::pcoa(wunifrac, correction = "cailliez")
@@ -136,7 +136,18 @@ pl <- dfpc %>%
     stat_ellipse(aes(color = Sex), type = "norm")
 ggsave(pl, "results/ordination/PCoA_WeightedUnifrac.pdf", device = "pdf", width = 6, height = 5)
 
-## CLR-transformed PCA
+pl <- dfpc %>% filter(Sex == "Female") %>% 
+    ggplot(aes(Axis.1, Axis.2)) +
+    geom_point(aes(color = MenopauseYn), size = 2) +
+    xlab(paste0('PCo1 (', round(expl_variance[1], digits = 1),'%)')) +
+    ylab(paste0('PCo2 (', round(expl_variance[2], digits = 1),'%)')) +
+    theme_Publication() +
+    scale_color_manual(values = pal_nejm()(4)[3:4]) +
+    guides(fill = guide_legend(override.aes = list(shape = 21, size = 2))) +
+    stat_ellipse(aes(color = MenopauseYn), type = "norm")
+ggsave(pl, "results/ordination/PCoA_WeightedUnifrac_meno.pdf", device = "pdf", width = 6, height = 5)
+
+#### CLR-transformed PCA ####
 pseudocount <- 1
 pc <- mixOmics::pca(tab_matrix + pseudocount, center = T, scale = F, logratio = 'CLR') # scale should be F when CLR is used
 expl_variance <- pc$explained_variance * 100
@@ -147,6 +158,7 @@ dfclr <- as.data.frame(dfclr)
 print(pc$cum.var)
 # add metadata
 dfclr$Sex <- df_new$Sex[match(rownames(dfclr), df_new$ID)]
+dfclr$MenopauseYn <- df_new$MenopauseYn[match(rownames(dfclr), df_new$ID)]
 
 # Plot PCA CLR-transformed
 plclr <- dfclr %>% 
@@ -160,3 +172,15 @@ plclr <- dfclr %>%
     ggtitle('PCA CLR-transformed') + 
     stat_ellipse(aes(color = Sex), type = "norm")
 ggsave(plclr, "results/ordination/PCA_CLR.pdf", device = "pdf", width = 6, height = 5)
+
+plclr <- dfclr %>% filter(Sex == "Female") %>% 
+    ggplot(aes(PC1, PC2)) +
+    geom_point(aes(color = MenopauseYn), size = 2) +
+    xlab(paste0('PC1 (', round(expl_variance[1], digits = 1),'%)')) + # PComp, not PCoord
+    ylab(paste0('PC2 (', round(expl_variance[2], digits = 1),'%)')) +
+    theme_Publication() +
+    scale_color_manual(values = pal_nejm()(4)[3:4]) +
+    guides(fill = guide_legend(override.aes = list(shape = 21))) +
+    ggtitle('PCA CLR-transformed') + 
+    stat_ellipse(aes(color = MenopauseYn), type = "norm")
+ggsave(plclr, "results/ordination/PCA_CLR_meno.pdf", device = "pdf", width = 6, height = 5)
