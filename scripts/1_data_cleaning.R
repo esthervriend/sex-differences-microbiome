@@ -141,11 +141,11 @@ df_new <- df %>%
                                         labels = c('Low', 'Moderate', 'High')),
                    across(where(is.numeric), as.numeric), # all other vars to numeric, do this last,
                    MenopauseYn = case_when(
-                       is.na(MenopauseAge) & Sex == "Female" ~ "No",
-                       !is.na(MenopauseAge) ~ "Yes",
+                       is.na(MenopauseAge) & Sex == "Female" ~ "Premenopausal",
+                       !is.na(MenopauseAge) ~ "Postmenopausal",
                        .default = NA # for men
                    ),
-                   MenopauseYn = as.factor(MenopauseYn),
+                   MenopauseYn = fct_rev(as.factor(MenopauseYn)),
                    MenopauseDuration = case_when(
                        MenopauseYn == "Yes" ~ Age - MenopauseAge,
                        .default = NA
