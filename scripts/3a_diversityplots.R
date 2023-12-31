@@ -120,7 +120,7 @@ plfaith <- ggplot(data = dffai, aes(x = Sex, y = PD, fill = Sex)) +
             geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
             theme_Publication() + 
             scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") + 
-            labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
+            labs(title = "Faith's PD", y = "Faith's phylogenetic diversity", x = "") +
             stat_compare_means(method = "wilcox.test")
 ggsave(plfaith, filename = "results/alphadiversity/faiths.pdf", device = "pdf", width = 4, height = 5)
 ggsave(plfaith, filename = "results/alphadiversity/faiths.svg", device = "svg", width = 4, height = 5)
@@ -132,7 +132,7 @@ plfaith_meno <- dffai %>% filter(Sex == "Female") %>%
     geom_boxplot(outlier.shape = NA, fill = "white", width = 0.1) +
     theme_Publication() + 
     scale_fill_manual(values = pal_nejm()(4)[3:4], guide = "none") + 
-    labs(title = "Alpha diversity (Faith's PD)", y = "Faith's phylogenetic diversity") +
+    labs(title = "Faith's PD", y = "Faith's phylogenetic diversity", x = "") +
     stat_compare_means(method = "wilcox.test")
 ggsave(plfaith_meno, filename = "results/alphadiversity/faiths_meno.pdf", device = "pdf", width = 4, height = 5)
 ggsave(plfaith_meno, filename = "results/alphadiversity/faiths_meno.svg", device = "svg", width = 4, height = 5)
