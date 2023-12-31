@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH -c 16
-#SBATCH --mem=10G
-#SBATCH --time=12:00:00
+#SBATCH -c 2
+#SBATCH --mem=7G
+#SBATCH --time=0:30:00
 #SBATCH -p 'genoa'
 eval "$(conda shell.bash hook)"
 conda activate rscripts
