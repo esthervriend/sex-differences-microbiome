@@ -40,8 +40,8 @@ head(df)
 any(is.na(df$Sex)) # FALSE
 any(is.na(df$MenopauseYn)) # FALSE
 df$MenopauseYn <- case_when(
-                df$MenopauseYn=="No" ~ 0,
-                df$MenopauseYn=="Yes" ~ 1)
+                df$MenopauseYn=="Premenopausal" ~ 0,
+                df$MenopauseYn=="Postmenopausal" ~ 1)
 summary(as.factor(df$MenopauseYn))
 df <- df %>% dplyr::select(ID, MenopauseYn)
 dim(df)
