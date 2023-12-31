@@ -70,15 +70,15 @@ head(dbray)
 ## PERMANOVA / adonis
 set.seed(1234)
 # distance matrix and metadata (df with the outcome / covariates) must have the same sample order as bray distance matrix / distance object
-all(df_new$ID == sample_names(tab)) # FALSE
 dfanova <- df_new %>%
     slice(match(sample_names(tab), ID))
 all(dfanova$ID == sample_names(tab)) # TRUE
 dim(dfanova)
-names(dfanova)[1:5]
-res1 <- adonis(bray ~ Sex, data = dfanova) # PERMANOVA
+names(dfanova)
+res1 <- adonis2(bray ~ Sex, data = dfanova) # PERMANOVA
 print(res1)
-res2 <- adonis(bray ~ MenopauseYn, data = dfanova) # PERMANOVA
+df_meno <- dfanova %>% filter(Sex == "Female")
+res2 <- adonis(bray ~ MenopauseYn, data = df_meno) # PERMANOVA
 print(res2)
 
 ## Bray curtis plot with PERMANOVA annotation
