@@ -9,68 +9,6 @@ library(phyloseq)
 library(forcats)
 library(stringr)
 
-## Open phyloseq object
-otu <- rio::import("data/HELUIS.Verhaar.2023.otu_table.csv", header = TRUE)
-rownames(otu) <- otu[,1]
-otu <- otu[,-1]
-tax <- rio::import("Data/HELUIS.Verhaar.2023.tax_table.csv", header = TRUE)
-rownames(tax) <- tax$V1
-tax$V1 <- NULL
-tax <- as.matrix(tax)
-tree <- ape::read.tree("data/HELUIS.Verhaar.2023.phy_tree.tree")
-# sampledata <- rio::import("data/HELUIS.Verhaar.2023.sam_data.csv", header = TRUE) = empty
-
-## Make phyloseq
-heliusmb <- phyloseq(otu_table(otu, taxa_are_rows = T), tax_table(tax), phy_tree(tree))
-sample_names(heliusmb) <-str_c("S",sample_names(heliusmb)) # safeguard that sample names cannot be used as numeric in matrices
-sample_names(heliusmb)
-
-## Inspect phyloseq object
-ntaxa(heliusmb)
-nsamples(heliusmb)
-depth <- colSums(heliusmb@otu_table)
-all(depth == 14932)
-as.data.frame(as(heliusmb@otu_table, "matrix"))
-
-### Fix ASV taxonomy
-tax <- as.data.frame(as(heliusmb@tax_table, 'matrix'))
-head(tax)
-sum(!is.na(tax$Species)) / nrow(tax) * 100 # 2.0 % of all ASVs have species level
-sum(!is.na(tax$Genus)) / nrow(tax) * 100 # 81.4 % of all ASVs have genus level
-sum(!is.na(tax$Family)) / nrow(tax) * 100 # 96.9 % of all ASVs have family level
-sum(!is.na(tax$Phylum)) / nrow(tax) * 100 # 99.9 % of all ASVs have phylum level
-nrow(tax)
-
-### Get top 300 ASV by abundance 
-ss <- taxa_sums(heliusmb)
-ss <- ss[order(ss, decreasing = T)]
-ss <- ss[1:300]
-top300 <- names(ss)
-tax300 <- tax[rownames(tax) %in% top300, ]
-
-sum(!is.na(tax300$Species)) / nrow(tax300) * 100 # 28.7 % of top 300 ASVs have species level
-sum(!is.na(tax300$Genus)) / nrow(tax300) * 100 # 84.7 % of top 300 ASVs  have genus level
-sum(!is.na(tax300$Family)) / nrow(tax300) * 100 # 97.3 % of top 300 ASVs have family level
-sum(!is.na(tax300$Phylum)) / nrow(tax300) * 100 # 100 % of top 300 ASVs have phylum level
-
-### Get taxonomy for ASVs
-tax <- tax %>% 
-  mutate(Tax = case_when(
-    !is.na(Genus) & !is.na(Species) ~ paste(Genus, Species),
-    !is.na(Genus) & is.na(Species) ~ paste(Genus, 'spp.'),
-    !is.na(Family) & is.na(Genus) ~ paste(Family, 'spp.'),
-    !is.na(Order) & is.na(Family) ~ paste(Order, 'spp.'),
-    !is.na(Class) & is.na(Order) ~ paste(Class, 'spp.'),
-    !is.na(Phylum) & is.na(Class) ~ paste(Phylum, 'spp.'),
-    !is.na(Kingdom) & is.na(Phylum) ~ paste(Kingdom, 'spp.'),
-    is.na(Kingdom) ~ 'unclassified'),
-    ASV = rownames(.)
-  )
-unique(tax$Tax)    
-
-saveRDS(heliusmb, file = "data/phyloseq.RDS")
-saveRDS(tax, file = "data/tax_table.RDS")
-
 ## Open HELIUS clinical data
 df <- haven::read_sav("data/231109_HELIUS data Barbara Verhaar.sav")
 df$H1_LftMenstrWeg <- as.numeric(df$H1_LftMenstrWeg)
@@ -167,29 +105,18 @@ df_new <- df %>%
   # remove unused levels
   droplevels(.) %>% 
   # filter out all participants that used antibiotics at the moment of sample collection
-  filter(FecalSample_AB == "No") 
+  filter(FecalSample_AB == "No")
 dim(df_new)
 
-## Select IDs present in both dataframes
-sample_names_to_keep <- df_new$ID
-sample_names_to_keep <- as.character(sample_names_to_keep)
-heliusmb <- prune_samples(sample_names_to_keep, heliusmb)
+# Open phyloseq object
+heliusmb <- readRDS("data/phyloseq_rarefied.RDS")
+sample_names(heliusmb) <- str_c("S", sample_names(heliusmb))
 
-sample_ids <- sample_names(heliusmb)
-df_new <- df_new[df_new$ID %in% sample_ids, ]
-dim(df_new)
-rownames(df_new) <- df_new$ID
-heliusmbcomplete <- merge_phyloseq(heliusmb, df_new)
+# Select samples that are in dataset
+heliusmb <- prune_samples(sample_names(heliusmb) %in% df_new$ID, heliusmb)
+heliusmb
+all(df_new$ID %in% sample_names(heliusmb)) # TRUE
 
 ## Save files
 saveRDS(df_new, file = "data/clinicaldata.RDS")
-saveRDS(heliusmbcomplete, file = "data/phyloseq_sampledata.RDS")
-
-
-####################### check missing heliusnrs
-heliusdata <- df[,1]
-heliusdata$Heliusnr <- as.character(heliusdata$Heliusnr)
-otudata <- as.data.frame(colnames(otu))
-colnames(otudata)[1] <- "Heliusnr"
-
-join <- anti_join(otudata, heliusdata)
+saveRDS(heliusmb, file = "data/phyloseq_sampledata.RDS")
