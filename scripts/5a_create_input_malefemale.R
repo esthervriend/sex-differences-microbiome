@@ -47,7 +47,7 @@ df <- df %>% dplyr::select(ID, Sex)
 ## Open RDS file with OTU table
 mb <- readRDS('data/phyloseq_sampledata.RDS')
 otu <- t(as(mb@otu_table, "matrix"))
-tk <- apply(otu, 2, function(x) sum(x > 5) > (0.2*length(x)))
+tk <- apply(otu, 2, function(x) sum(x > 5) > (0.3*length(x)))
 mbdf <- otu[,tk]
 dim(mbdf)
 mbdf <- as.data.frame(mbdf)
