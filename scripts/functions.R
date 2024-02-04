@@ -199,8 +199,10 @@ plot_features_tests_class <- function(input_path, output_path, top_n=10, labels=
     dd$y <- factor(ifelse(dd$y==1, labels[1],labels[2]))
     dd$y <- forcats::fct_rev(dd$y)
     comps <- list(c(labels[1],labels[2]))
-    colors <- ifelse(str_detect(labels, "Male"), rev(pal_nejm()(2)),
-                                                     pal_nejm()(4)[3:4])
+    colors <- case_when(
+        "Male" %in% labels ~ rev(c(pal_nejm()(2))), 
+        .default = c(pal_nejm()(4)[3:4])
+    )
     for(j in 1:length(features_tk)){
         asv <- features_tk[j]
         df <- dd %>% dplyr::select(all_of(asv), y)
@@ -279,7 +281,10 @@ plot_features_tests_top <- function(input_path, output_path, top_n=20, nrow=4, l
                         features = fct_inorder(features),
                         values = log10(values+1)
     )
-    colors <- ifelse(str_detect(labels, "Male"), rev(pal_nejm()(2)), pal_nejm()(4)[3:4])
+    colors <- case_when(
+        "Male" %in% labels ~ rev(c(pal_nejm()(2))), 
+        .default = c(pal_nejm()(4)[3:4])
+        )
     pl <- ggplot(df, aes(x=y, y=values))+
         geom_violin(aes(fill=y))+
         scale_fill_manual(values = colors, guide = FALSE)+
