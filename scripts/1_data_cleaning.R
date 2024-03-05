@@ -103,7 +103,11 @@ df_new <- df %>%
          ID = str_c("S", ID)
   ) %>% 
   # remove unused levels
-  droplevels(.) %>% 
+  droplevels(.) 
+
+saveRDS(df_new, "data/clinicaldata_shotgun.RDS")
+
+df_new <- df_new %>% 
   # filter out all participants that used antibiotics at the moment of sample collection
   filter(FecalSample_AB == "No")
 dim(df_new)
