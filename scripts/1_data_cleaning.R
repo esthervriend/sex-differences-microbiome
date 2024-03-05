@@ -105,7 +105,10 @@ df_new <- df %>%
   # remove unused levels
   droplevels(.) 
 
-saveRDS(df_new, "data/clinicaldata_shotgun.RDS")
+idshot <- rio::import("data/metaphlan/diversity/combined_table_richness.tsv") %>% 
+    mutate(ID = str_remove(V1, "_T1"))
+dfshot <- df_new %>% filter(ID %in% idshot$ID)
+saveRDS(dfshot, "data/clinicaldata_shotgun.RDS")
 
 df_new <- df_new %>% 
   # filter out all participants that used antibiotics at the moment of sample collection
