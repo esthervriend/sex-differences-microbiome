@@ -7,7 +7,7 @@ library(stringr)
 
 source("scripts/functions_shotgun.R")
 
-path_true <- 'sex_metagen/output_XGB_class_sex_metagen_2024_03_03__01-40-28'
+path_true <- 'sex_metagen/output_XGB_class_sex_metagen_2024_03_11__12-49-23'
 data_path <- 'sex_metagen/input_data'
 labels <- c("Male", "Female")
 
@@ -16,7 +16,7 @@ plot_feature_importance_color_shotgun(path_true, 20)
 plot_features_tests_shotgun(data_path, path_true, top_n=20, labels)
 plot_features_top_shotgun(data_path, path_true, top_n=20, nrow=4, labels)
 
-path_true <- 'menopause_metagen/output_XGB_class_menopause_metagen_2024_03_03__01-59-48'
+path_true <- 'menopause_metagen/output_XGB_class_menopause_metagen_2024_03_11__13-00-41'
 data_path <- 'menopause_metagen/input_data'
 labels <- c("Postmenopausal", "Premenopausal")
 
