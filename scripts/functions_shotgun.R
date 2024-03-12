@@ -443,6 +443,7 @@ plot_features_top_shotgun <- function(input_path, output_path, top_n=20, nrow=4,
     dir.create(plot_path)
     r <- rio::import(file.path(output_path,'feature_importance.txt'))
     r <- r %>% arrange(-RelFeatImp)
+    shot <- readRDS("data/shotgun_taxtable.RDS")
     input_data <- rio::import(file.path(input_path, 'X_data.txt'))
     feature_names <- read.csv(file.path(input_path, 'feat_ids.txt'), sep = '\t', header = F)
     names(input_data) <- feature_names$V1
