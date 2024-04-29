@@ -122,6 +122,7 @@ sample_names(heliusmb) <- str_c("S", sample_names(heliusmb))
 # Select samples that are in dataset
 heliusmb <- prune_samples(sample_names(heliusmb) %in% df_new$ID, heliusmb)
 heliusmb
+df_new <- df_new %>% filter(ID %in% sample_names(heliusmb))
 all(df_new$ID %in% sample_names(heliusmb)) # TRUE
 
 ## Save files
