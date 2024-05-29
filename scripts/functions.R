@@ -126,7 +126,7 @@ plot_feature_importance_class <- function(path_true, top_n){
                  high = '#034E7B')
     r <- rio::import(file.path(path_true, 'feature_importance.txt'))
     r <- r %>% arrange(-RelFeatImp)
-    tax <- readRDS("data/tax_table.RDS")
+    tax <- readRDS("data/taxtable_rarefied.RDS")
     r$Tax <- tax$Tax[match(r$FeatName, tax$ASV)]
     r <- r[1:top_n, ]
     r <- r %>% mutate(Tax = factor(make.unique(Tax), levels = rev(make.unique(Tax))))
@@ -143,7 +143,8 @@ plot_feature_importance_class <- function(path_true, top_n){
         theme(axis.text.y = element_text(size=10))+
         theme(legend.key.size= unit(0.5, "cm"))+
         theme(legend.position = 'right')
-    ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 8, height = 7)
+    pl
+    # ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 8, height = 7)
 }
 
 plot_features_tests_class <- function(input_path, output_path, top_n=10, labels=c("1", "0")){
@@ -183,7 +184,7 @@ plot_features_tests_class <- function(input_path, output_path, top_n=10, labels=
     r <- r %>% arrange(-RelFeatImp)
     input_data <- rio::import(file.path(input_path, 'X_data.txt'))
     feature_names <- read.csv(file.path(input_path, 'feat_ids.txt'), sep = '\t', header = F)
-    tax <- readRDS("data/tax_table.RDS")
+    tax <- readRDS("data/taxtable_rarefied.RDS")
     names(input_data) <- feature_names$V1
     if(top_n > ncol(input_data)){
         cat('\n\nRequested no. of features is higher than total number of features in model.\n
@@ -260,7 +261,7 @@ plot_features_tests_top <- function(input_path, output_path, top_n=20, nrow=4, l
     input_data <- rio::import(file.path(input_path, 'X_data.txt'))
     feature_names <- read.csv(file.path(input_path, 'feat_ids.txt'), sep = '\t', header = F)
     names(input_data) <- feature_names$V1
-    tax <- readRDS("data/tax_table.RDS")
+    tax <- readRDS("data/taxtable_rarefied.RDS")
     if(top_n > ncol(input_data)){
         cat('\n\nRequested no. of features is higher than total number of features in model.\nShowing all features in model.\n\n')
         top_n <- ncol(input_data)
@@ -271,24 +272,28 @@ plot_features_tests_top <- function(input_path, output_path, top_n=20, nrow=4, l
     colnames(dd) <- make.unique(tax$Tax[match(colnames(dd), tax$ASV)])
     y <- rio::import(file.path(input_path, 'y_binary.txt'))
     dd$y <- y$V1
+    dd$y <- factor(ifelse(dd$y==1, labels[1],labels[2]))
+    dd$y <- fct_rev(dd$y)
     df <- dd %>% pivot_longer(-y, names_to = 'features', values_to = 'values')
     df <- df %>% mutate(y = factor(y),
                         features = as.factor(features),
                         features = fct_inorder(features),
                         values = values / 200
     )
-
-    pl <- ggplot(df, aes(x=y, y=values))+
+    comps <- list(c(labels[1], labels[2]))
+    pl <- ggplot(df, aes(x=y, y=values+0.01))+
         geom_violin(aes(fill=y), trim = TRUE)+
         scale_fill_nejm(guide = FALSE) +
-        geom_boxplot(width=0.1, fill="white")+
+        geom_boxplot(width=0.1, fill="white", outlier.shape = NA)+
+        scale_y_log10() +
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (%)')+
-        ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0))+
+        ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0),
+                                   tip.length = 0, label = "p.signif")+
         facet_wrap(~ features, nrow=nrow, scales = 'free')
     pl
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
 }
 

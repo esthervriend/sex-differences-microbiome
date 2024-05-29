@@ -45,16 +45,18 @@ plot_feature_importance_pathways <- function(path_true, top_n){
     pl <- ggplot(data=r, aes(y=RelFeatImp, x=Tax, fill=RelFeatImp)) + 
         theme_Publication()+
         scale_fill_gradient2(low=cols$low, mid = cols$mid, high=cols$high, space='Lab', name="",
-                             midpoint = 50)+
+                             midpoint = 50, guide = "none")+
         geom_bar(stat="identity")+
         coord_flip() +
         ylab("Relative Importance (%)")+
         xlab("") +
+        ggtitle("Feature importance: best predicting pathways for sex")
         theme(axis.text.x = element_text(size=12)) + 
         theme(axis.text.y = element_text(size=10))+
         theme(legend.key.size= unit(0.5, "cm"))+
         theme(legend.position = 'right')
-    ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
+    pl
+    # ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
 }
 
 plot_features_tests_pathways <- function(input_path, output_path, top_n=10, labels=c("1", "0")){
@@ -205,8 +207,8 @@ plot_features_top_pathways <- function(input_path, output_path, top_n=20, nrow=4
         ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0))+
         facet_wrap(~ features, nrow=nrow, scales = 'free')
     pl
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
 }
 
 
@@ -258,7 +260,7 @@ plot_feature_importance_shotgun <- function(path_true, top_n){
     pl <- ggplot(data=r, aes(y=RelFeatImp, x=Tax, fill=RelFeatImp)) + 
         theme_Publication()+
         scale_fill_gradient2(low=cols$low, mid = cols$mid, high=cols$high, space='Lab', name="",
-                             midpoint = 50)+
+                             midpoint = 50, guide = "none")+
         geom_bar(stat="identity")+
         coord_flip() +
         ylab("Relative Importance (%)")+
@@ -267,7 +269,7 @@ plot_feature_importance_shotgun <- function(path_true, top_n){
         theme(axis.text.y = element_text(size=10))+
         theme(legend.key.size= unit(0.5, "cm"))+
         theme(legend.position = 'right')
-    ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
+    # ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
 }
 
 plot_feature_importance_color_shotgun <- function(path_true, top_n){
@@ -327,7 +329,8 @@ plot_feature_importance_color_shotgun <- function(path_true, top_n){
         theme(axis.text.y = element_text(size=10))+
         theme(legend.key.size= unit(0.5, "cm"))+
         theme(legend.position = 'right')
-    ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
+    pl
+    # ggsave(path = path_true, filename = 'plot_Feature_Importance.pdf', device = 'pdf', width = 10, height = 7)
 }
 
 plot_features_tests_shotgun <- function(input_path, output_path, top_n=10, labels=c("1", "0")){
@@ -479,6 +482,6 @@ plot_features_top_shotgun <- function(input_path, output_path, top_n=20, nrow=4,
         scale_y_log10() +
         facet_wrap(~ features, nrow=nrow, scales = 'free')
     pl
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
-    ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
+    # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.svg'), device = 'svg', width=15, height = 14)
 }
