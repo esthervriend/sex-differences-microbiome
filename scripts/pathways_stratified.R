@@ -1,4 +1,4 @@
-#### Pyridoxal analyses
+#### Pathway plots
 
 ## Libraries
 library(tidyverse)
@@ -7,7 +7,7 @@ library(ggsci)
 library(ggpubr)
 
 ## Data
-df <- readRDS('data/clinicaldata_shotgun.RDS')
+df <- readRDS('data/clinicaldata_shotgun.RDS') %>% mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
 pathways <- rio::import("data/pyridoxal_pathways.txt")
 head(pathways)
 names(pathways)
@@ -33,7 +33,7 @@ dim(dfpaths)
 colorguide <- c(pal_nejm()(2)[c(2,1)])
 
 pltli <- list()
-for(path in names(dfpaths)[58:ncol(dfpaths)]){
+for(path in names(dfpaths)[59:ncol(dfpaths)]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     pl <- ggplot(data = dfpaths, aes(x = Sex, y = pathid)) +
@@ -43,7 +43,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance', title = path)+
-        ggpubr::stat_compare_means(comparisons = list(c("Male", "Female")), label = "p.signif",
+        ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
                                    paired = F, size = 4)+
         scale_y_log10() + 
         theme(plot.title = element_text(size = rel(0.8)))
@@ -54,6 +54,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
 ggarrange(plotlist = pltli, ncol = 3, nrow = 5, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)    
 ggsave("results/pyridoxalphos.pdf", width = 12, height = 22)
+ggsave("results/pyridoxalphos.png", width = 12, height = 22)
 
 abundance <- rio::import("data/metaphlan/merged/combined_table.tsv")
 abundance2 <- abundance %>% filter(clade_name == "k__Bacteria|p__Verrucomicrobia|c__Verrucomicrobiae|o__Verrucomicrobiales|f__Akkermansiaceae|g__Akkermansia|s__Akkermansia_muciniphila")
@@ -76,7 +77,8 @@ pyri <- pyri %>% select(everything(.), "ppGp metabolism" = `PPGPPMET-PWY`,
 
 dfpaths <- inner_join(dfpaths, akk, by = "ID") %>% inner_join(., pyri, by = "ID")
 dfpaths <- dfpaths %>% mutate(Menopause_Sex = case_when(
-        Sex == "Male" ~ "Men",
+        Sex == "Male" & Age < 50 ~ "Younger men",
+        Sex == "Male" & Age >= 50 ~ "Older men",
         MenopauseYn == "Postmenopausal" ~ "Postmenopausal",
         MenopauseYn == "Premenopausal" ~ "Premenopausal"
         ),
@@ -101,6 +103,7 @@ ggplot(data = dfpaths %>% filter(Akkermansia_muciniphila  > ps2),
     facet_wrap(~Sex) +
     theme_Publication()
 ggsave("results/akkermansia_pyridoxal.pdf", width = 7, height = 5)
+ggsave("results/akkermansia_pyridoxal.png", width = 7, height = 5)
 
 ggplot(data = dfpaths %>% filter(Akkermansia_muciniphila  > ps2), 
        aes(x = `pyridoxal 5'−phosphate biosynthesis I`, 
@@ -115,6 +118,7 @@ ggplot(data = dfpaths %>% filter(Akkermansia_muciniphila  > ps2),
     labs(color = "") +
     theme_Publication()
 ggsave("results/akkermansia_pyridoxal_meno.pdf", width = 7, height = 5)
+ggsave("results/akkermansia_pyridoxal_meno.png", width = 7, height = 5)
 
 #### Other pathways ####
 pathways <- rio::import("data/histidine_pathways.txt")
@@ -141,7 +145,7 @@ dim(dfpaths)
 colorguide <- c(pal_nejm()(2)[c(2,1)])
 
 pltli <- list()
-for(path in names(dfpaths)[58:ncol(dfpaths)]){
+for(path in names(dfpaths)[59:ncol(dfpaths)]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     pl <- ggplot(data = dfpaths, aes(x = Sex, y = pathid)) +
@@ -151,7 +155,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance', title = path)+
-        ggpubr::stat_compare_means(comparisons = list(c("Male", "Female")), label = "p.signif",
+        ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
                                    paired = F, size = 4)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
@@ -162,6 +166,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
 ggarrange(plotlist = pltli, ncol = 4, nrow = 5, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)  
 ggsave("results/histidine_pathways.pdf", width = 13, height = 25)
+ggsave("results/histidine_pathways.png", width = 13, height = 25)
 
 
 pathways <- rio::import("data/arginine_pathways.txt")
@@ -188,7 +193,7 @@ dim(dfpaths)
 colorguide <- c(pal_nejm()(2)[c(2,1)])
 
 pltli <- list()
-for(path in names(dfpaths)[58:ncol(dfpaths)]){
+for(path in names(dfpaths)[59:ncol(dfpaths)]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     pl <- ggplot(data = dfpaths, aes(x = Sex, y = pathid)) +
@@ -198,7 +203,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance', title = path)+
-        ggpubr::stat_compare_means(comparisons = list(c("Male", "Female")), label = "p.signif",
+        ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
                                    paired = F, size = 4)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
@@ -235,7 +240,7 @@ dim(dfpaths)
 colorguide <- c(pal_nejm()(2)[c(2,1)])
 
 pltli <- list()
-for(path in names(dfpaths)[58:ncol(dfpaths)]){
+for(path in names(dfpaths)[59:ncol(dfpaths)]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     pl <- ggplot(data = dfpaths, aes(x = Sex, y = pathid)) +
@@ -245,7 +250,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance', title = path)+
-        ggpubr::stat_compare_means(comparisons = list(c("Male", "Female")), label = "p.signif",
+        ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
                                    paired = F, size = 4)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
@@ -292,7 +297,7 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance', title = path)+
-        ggpubr::stat_compare_means(comparisons = list(c("Male", "Female")), label = "p.signif",
+        ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
                                    paired = F, size = 4)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
