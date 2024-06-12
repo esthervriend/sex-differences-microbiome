@@ -38,6 +38,7 @@ df_new <- df %>%
                 TotalCalories=ENKcal_Sum, Proteins=Prot_Sum, FattyAcids=FattyAcidsTot_Sum,
                 SatFat=SFA_Sum, MonoUnsatFat=MUFA_cis_Sum, PolyUnsatFat=PUFA_Sum,
                 Fibre=Fibre_Sum, Carbohydrates=Carbo_Sum, AlcoholIntake=Alcohol_Sum,
+                Sodium = Natrium_intake_totaal_gram,
                 # Medication
                 DMMed=H1_Diabetesmiddelen, AntiHT=H1_Antihypertensiva, 
                 AB=H1_Antibiotica, LipidLowering=H1_Antilipaemica, Antihistaminics=H1_Antihistaminica,
