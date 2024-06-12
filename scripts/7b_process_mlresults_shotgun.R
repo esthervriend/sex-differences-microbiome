@@ -5,13 +5,47 @@ library(ggplot2)
 library(ggsci)
 library(stringr)
 
+theme_Publication <- function(base_size=14, base_family="sans") {
+    library(grid)
+    library(ggthemes)
+    library(stringr)
+    (theme_foundation(base_size=base_size, base_family=base_family)
+        + theme(plot.title = element_text(face = "bold",
+                                          size = rel(1.0), hjust = 0.5),
+                text = element_text(),
+                panel.background = element_rect(colour = NA),
+                plot.background = element_rect(colour = NA),
+                panel.border = element_rect(colour = NA),
+                axis.title = element_text(face = "bold",size = rel(0.8)),
+                axis.title.y = element_text(angle=90, vjust =2),
+                axis.title.x = element_text(vjust = -0.2),
+                axis.text = element_text(size = rel(0.7)),
+                axis.text.x = element_text(angle = 0), 
+                axis.line = element_line(colour="black"),
+                axis.ticks = element_line(),
+                panel.grid.major = element_line(colour="#f0f0f0"),
+                panel.grid.minor = element_blank(),
+                legend.key = element_rect(colour = NA),
+                legend.position = "bottom",
+                # legend.direction = "horizontal",
+                legend.key.size= unit(0.2, "cm"),
+                legend.spacing  = unit(0, "cm"),
+                # legend.title = element_text(face="italic"),
+                plot.margin=unit(c(10,5,5,5),"mm"),
+                strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+                strip.text = element_text(face="bold"),
+                plot.caption = element_text(size = rel(0.5), face = "italic")
+        ))
+    
+} 
+
 source("scripts/functions_shotgun.R")
 
 #### Composition ####
 ## Plot assembled figure composition sex
 path_true <- 'sex_metagen/output_XGB_class_sex_metagen_2024_03_11__12-49-23'
 data_path <- 'sex_metagen/input_data'
-labels <- c("Male", "Female")
+labels <- c("Men", "Women")
 
 plot_feature_importance_shotgun(path_true, 20)
 plot_feature_importance_color_shotgun(path_true, 20)
@@ -27,6 +61,9 @@ plarr1 <- ggarrange(ggarrange(svg_grob), pl2, pl3,
                     heights = c(1.2,1.3,0.8))
 ggsave(plarr1, filename = "results/comp_sex.pdf",
        width = 14, height = 18)
+ggsave(plarr1, filename = "results/comp_sex.png",
+       width = 14, height = 18)
+
 
 ## Plot assembled figure composition menopause
 path_true <- 'menopause_metagen/output_XGB_class_menopause_metagen_2024_03_11__13-00-41'
@@ -45,13 +82,15 @@ plarr1 <- ggarrange(ggarrange(svg_grob), pl2,
                     nrow = 2, labels = c("A", "B"), heights = c(1.0,1.0))
 ggsave(plarr1, filename = "results/comp_menopause.pdf",
        width = 12, height = 15)
+ggsave(plarr1, filename = "results/comp_menopause.png",
+       width = 12, height = 15)
 
 
 #### PATHWAYS ####
 ## Plot differences between sex pathways of interest
 path_true <- 'sex_pathways/output_XGB_class_sex_pathways_2024_03_03__20-18-59'
 data_path <- 'sex_pathways/input_data'
-labels <- c("Male", "Female")
+labels <- c("Men", "Women")
 
 plot_feature_importance_pathways(path_true, 20)
 plot_features_tests_pathways(data_path, path_true, top_n=20, labels)
@@ -103,6 +142,7 @@ for(path in names(dfpaths)[58:61]){
 }
 ggarrange(plotlist = pathli, ncol = 2, nrow = 2, labels = LETTERS[1:4])
 ggsave("results/diffpathways_menopause.pdf", width = 10, height = 12)
+ggsave("results/diffpathways_menopause.png", width = 10, height = 12)
 
 pathli2 <- list()
 for(path in names(dfpaths)[58:61]){
@@ -137,6 +177,8 @@ plarr2b <- ggarrange(svg_grob, pl2,
                     nrow = 3, heights = c(1.0, 1.2, 1.0), labels = c(LETTERS[1:2], ""))
 ggsave(plarr2b, filename = "results/pathways_sexdiff.pdf",
        width = 15, height = 20)
+ggsave(plarr2b, filename = "results/pathways_sexdiff.png",
+       width = 15, height = 20)
 
 ## Plot assembled figure pathways menopause
 path_true <- 'menopause_pathways/output_XGB_class_menopause_pathways_2024_03_03__20-28-16'
@@ -153,5 +195,7 @@ svg_grob <- svgparser::read_svg(file.path(path_true,"auc.svg"))
 plarr1 <- ggarrange(ggarrange(svg_grob), pl2, 
                     nrow = 2, labels = c("A", "B"), heights = c(1.0,1.0))
 ggsave(plarr1, filename = "results/pathways_menopause.pdf",
+       width = 12, height = 15)
+ggsave(plarr1, filename = "results/pathways_menopause.png",
        width = 12, height = 15)
 
