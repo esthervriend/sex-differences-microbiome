@@ -96,7 +96,7 @@ plot_feature_importance_pathways(path_true, 20)
 plot_features_tests_pathways(data_path, path_true, top_n=20, labels)
 plot_features_top_pathways(data_path, path_true, top_n=20, nrow=4, labels)
 
-df <- readRDS('data/clinicaldata_shotgun.RDS')
+df <- readRDS('data/clinicaldata_shotgun.RDS') %>% mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
 pathwaysfilt <- readRDS("data/pathways_filtered.RDS")
 pathwaysofinterest <- c("PPGPPMET-PWY", "PHOSLIPSYN-PWY", "PYRIDOXSYN-PWY", "PWY-5030")
 pathwaysfilt <- pathwaysfilt %>% filter(rownames(.) %in% pathwaysofinterest)
@@ -109,7 +109,7 @@ pyri <- pyri %>% select(everything(.), "ppGp metabolism" = `PPGPPMET-PWY`,
 
 dfpaths <- inner_join(df, pyri, by = "ID")
 dfpaths <- dfpaths %>% mutate(Menopause_Sex = case_when(
-    Sex == "Male" ~ "Men",
+    Sex == "Men" ~ "Men",
     MenopauseYn == "Postmenopausal" ~ "Postmenopausal",
     MenopauseYn == "Premenopausal" ~ "Premenopausal"
 ),
