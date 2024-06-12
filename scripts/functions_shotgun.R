@@ -386,7 +386,7 @@ plot_features_tests_shotgun <- function(input_path, output_path, top_n=10, label
     dd$y <- factor(ifelse(dd$y==1, labels[1],labels[2]))
     dd$y <- fct_rev(dd$y)
     comps <- list(c(labels[1],labels[2]))
-    colorguide <- case_when("Female" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(1,2)]),
                             .default = c(pal_nejm()(4)[3:4]))
     print(colorguide)
     for(j in 1:length(features_tk)){
@@ -394,7 +394,7 @@ plot_features_tests_shotgun <- function(input_path, output_path, top_n=10, label
         df <- dd %>% dplyr::select(all_of(asv), y)
         names(df)[1] <- 'Feature'
         tax_asv <- shot$Species[match(asv, shot$rowname)]
-        pl <- ggplot(df, aes(x=y, y=Feature, fill=y))+
+        pl <- ggplot(df, aes(x=y, y=Feature, fill=y+0.001))+
             geom_violin(trim = TRUE) +
             scale_fill_manual(values = colorguide, guide = FALSE)+
             geom_boxplot(width=0.1, fill="white")+
@@ -468,10 +468,10 @@ plot_features_top_shotgun <- function(input_path, output_path, top_n=20, nrow=4,
                         features = fct_inorder(features),
                         values = values
     )
-    colorguide <- case_when("Female" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(1,2)]),
                             .default = c(pal_nejm()(4)[3:4]))
     comps <- list(c(labels[1], labels[2]))
-    pl <- ggplot(df, aes(x=y, y=values))+
+    pl <- ggplot(df, aes(x=y, y=values+0.001))+
         geom_violin(aes(fill=y), trim = TRUE)+
         scale_fill_manual(values = colorguide, guide = FALSE) +
         geom_boxplot(width=0.1, fill="white")+
