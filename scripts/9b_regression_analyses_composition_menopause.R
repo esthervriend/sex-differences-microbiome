@@ -8,7 +8,6 @@ library(ggpubr)
 library(vegan)
 library(rio)
 library(dplyr)
-library(compositions)
 library(ggsci)
 library(forcats)
 

@@ -10,7 +10,7 @@ library(forcats)
 library(stringr)
 
 ## Open HELIUS clinical data
-df <- haven::read_sav("data/231109_HELIUS data Barbara Verhaar.sav")
+df <- haven::read_sav("data/231109_HELIUS data Barbara Verhaar_240702.sav")
 df$H1_LftMenstrWeg <- as.numeric(df$H1_LftMenstrWeg)
 
 # Change type of variable 
@@ -38,12 +38,12 @@ df_new <- df %>%
                 TotalCalories=ENKcal_Sum, Proteins=Prot_Sum, FattyAcids=FattyAcidsTot_Sum,
                 SatFat=SFA_Sum, MonoUnsatFat=MUFA_cis_Sum, PolyUnsatFat=PUFA_Sum,
                 Fibre=Fibre_Sum, Carbohydrates=Carbo_Sum, AlcoholIntake=Alcohol_Sum,
-                Sodium = Natrium_intake_totaal_gram,
+                Sodium=Natrium_intake_totaal_gram,
                 # Medication
                 DMMed=H1_Diabetesmiddelen, AntiHT=H1_Antihypertensiva, 
                 AB=H1_Antibiotica, LipidLowering=H1_Antilipaemica, Antihistaminics=H1_Antihistaminica,
                 Corticosteroids=H1_Corticosteroiden,SystSteroids=H1_SystSteroiden,
-                Antithromb=H1_Antithrombotica, Anticon=H1_Anticon3, HRT=H1_HRT_type_Barbara,
+                Antithromb=H1_Antithrombotica, Anticon=H1_Anticon2, HRT=H1_HRT_type_Barbara, PPI=H1_ProtPumpInh_Barbara,
                 # Antihypertensive medication
                 AllAntiHT=H1_Antihypertensiva, Diuretics=H1_AntihypertensivaC03,
                 CalciumAnt=H1_AntihypertensivaC08, BetaBlocker=H1_AntihypertensivaC07,
@@ -60,7 +60,7 @@ df_new <- df %>%
                   "CalciumAnt", "BetaBlocker", "RAASi", "Antithromb", 
                   "Corticosteroids",  "LipidLowering","DMMed","AB"), yesnocaps)
   ) %>%
-   droplevels(.) %>% 
+  droplevels(.) %>% 
   mutate(Sex = factor(Sex, levels = c("man","vrouw"), 
                       labels = c('Male', 'Female')),
          Ethnicity = forcats::fct_recode(Ethnicity, "Dutch"="NL",
@@ -104,12 +104,7 @@ df_new <- df %>%
          ID = str_c("S", ID)
   ) %>% 
   # remove unused levels
-  droplevels(.) 
-
-idshot <- rio::import("data/metaphlan/diversity/combined_table_richness.tsv") %>% 
-    mutate(ID = str_remove(V1, "_T1"))
-dfshot <- df_new %>% filter(ID %in% idshot$ID)
-saveRDS(dfshot, "data/clinicaldata_shotgun.RDS")
+  droplevels(.)
 
 df_new <- df_new %>% 
   # filter out all participants that used antibiotics at the moment of sample collection

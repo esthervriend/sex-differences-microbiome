@@ -8,8 +8,8 @@ library(ggpubr)
 library(vegan)
 library(rio)
 library(dplyr)
-library(compositions)
 library(ggsci)
+library(cowplot)
 library(forcats)
 
 
@@ -74,7 +74,7 @@ Model1menopause$LWR <- Model1menopause$Estimate - 1.96*Model1menopause$Std..Erro
 Model1menopause$UPR <- Model1menopause$Estimate + 1.96*Model1menopause$Std..Error
 Model1menopause <- Model1menopause %>%
   select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1menopause$Model <- "Crude"
+Model1menopause$Model <- "Unadjusted"
 write.table(Model1menopause, "clipboard", sep="\t", dec=",", col.names=NA)
 Model1menopause <- Model1menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
 write.csv2(Model1menopause, "results/Model1menopausepathway.csv")
@@ -133,11 +133,24 @@ forest_plot_menopause <- ggplot(Modelmenopause, aes(x = Estimate, y = fct_rev(fc
   theme(axis.ticks.x = element_blank(),
         axis.title.y = element_blank(),
         legend.position = 'right') +
-  scale_color_nejm(breaks=c('Crude', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for females") + 
+  scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
+  labs(x = "Log-transformed estimate and 95% CI for postmenopausal women") + 
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
   scale_x_continuous(breaks = seq(-2,2, by = 0.5))
 forest_plot_menopause
+
+forest_plot_menopause <- forest_plot_menopause + ggtitle("Best predicting pathways for menopause") + theme(plot.title = element_text(size = 15))
+
+
+forest_plot_menopause <- plot_grid(
+  forest_plot_menopause,
+  label_size = 15)
+forest_plot_menopause
+ggsave("results/forest_plot_menopause_pathways.tiff", plot=forest_plot_menopause, units="in", width=13, height=7, dpi=600, compression = 'lzw')
+
+
+
+
 
 
