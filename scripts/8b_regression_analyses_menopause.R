@@ -8,8 +8,8 @@ library(ggpubr)
 library(vegan)
 library(rio)
 library(dplyr)
-library(compositions)
 library(ggsci)
+library(cowplot)
 
 
 ## ggplot theme
@@ -43,6 +43,7 @@ theme_Publication <- function(base_size=14, base_family="sans") {
             strip.text = element_text(face="bold")
     ))}
 
+
 ## Load data
 # Clinical data and phyloseq
 df <- readRDS("data/clinicaldata.RDS")
@@ -58,7 +59,7 @@ rownames(pred_meno) <- pred_meno$FeatName
 
 
 ## Regression analyses Menopause
-# Model 1 (Crude)
+# Model 1 (Unadjusted)
 pred_meno <- pred_meno %>% slice_head(n = 20)
 
 Model1menopause <- data.frame()
@@ -73,7 +74,7 @@ Model1menopause$LWR <- Model1menopause$Estimate - 1.96*Model1menopause$Std..Erro
 Model1menopause$UPR <- Model1menopause$Estimate + 1.96*Model1menopause$Std..Error
 Model1menopause <- Model1menopause %>%
   select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1menopause$Model <- "Crude"
+Model1menopause$Model <- "Unadjusted"
 Model1menopause$ASV <- make.unique(tax$Tax[match(Model1menopause$ASV, tax$ASV)])
 write.table(Model1menopause, "clipboard", sep="\t", dec=",", col.names=NA)
 Model1menopause <- Model1menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
@@ -83,7 +84,7 @@ write.csv2(Model1menopause, "results/Model1menopause.csv")
 Model2menopause <- data.frame()
 for (i in 1:nrow(pred_meno)) {
   var_name <- pred_meno$FeatName[i]
-  formula <- as.formula(paste("log(", var_name, "+1) ~ MenopauseYn + Age + BMI + HT + DM + CurrSmoking"))
+  formula <- as.formula(paste("log(", var_name, "+1) ~ MenopauseYn + HT + DM + CurrSmoking"))
   coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete))$coef[2,c(1,2,4)]))
   Model2menopause <- bind_rows(Model2menopause,coef)
 }
@@ -124,17 +125,35 @@ Modelmenopause[, c(2,3,4,5)] <- lapply(Modelmenopause[, c(2,3,4,5)], as.numeric)
 
 ## Make ggplot
 forest_plot_menopause <- ggplot(Modelmenopause, aes(x = Estimate, y = fct_rev(fct_inorder(ASV)), color = fct_rev(fct_inorder(Model)), shape = Pvalue > 0.05)) +
-  geom_point(position = position_dodge(width = 1.0), size = 2.0) +
+  geom_point(position = position_dodge(width = 0.6), size = 2.0) +
   geom_vline(aes(xintercept = 0), size = .50, linetype = "dashed") + 
-  geom_errorbarh(aes(xmin = LWR, xmax = UPR), height = 0.5, position = position_dodge(width = 1.0)) +
+  geom_errorbarh(aes(xmin = LWR, xmax = UPR), height = 0.5, position = position_dodge(width = 0.6)) +
   theme_Publication() +
   theme(axis.ticks.x = element_blank(),
         axis.title.y = element_blank(),
         legend.position = 'right') +
-  scale_color_nejm(breaks=c('Crude', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for postmenopausal females") + 
+  scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
+  labs(x = "Log-transformed estimate and 95% CI for postmenopausal women") +
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
-  scale_x_continuous(breaks = seq(-2,2, by = 0.5))
+  scale_x_continuous(breaks = seq(-2,2, by = 0.5)) 
 forest_plot_menopause
+
+forest_plot_menopause <- forest_plot_menopause + ggtitle("Best predicting microbes for menopause") + theme(plot.title = element_text(size = 15))
+forest_plot_menopause
+
+ggsave("results/forest_plot_menopause.tiff", plot=forest_plot_menopause, units="in", width=10, height=7, dpi=600, compression = 'lzw')
+
+## Combine with plot for sex
+forest_plot_sexmenopause <- ggarrange(
+  forest_plot_sex,
+  forest_plot_menopause,
+  labels = c("A", "B"),
+  common.legend = TRUE, 
+  legend = "right",
+  ncol = 1,
+   align = "v"
+)
+forest_plot_sexmenopause
+ggsave("results/forest_plot_sexmenopause.tiff", plot=forest_plot_sexmenopause, units="in", width=12, height=12, dpi=600, compression = 'lzw')
 
