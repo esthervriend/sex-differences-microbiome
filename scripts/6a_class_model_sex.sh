@@ -22,3 +22,19 @@ python /projects/0/prjs0784/sex-differences-microbiome/scripts/XGBeast.py \
     -rand_seed 4321 \
     -param /projects/0/prjs0784/sex-differences-microbiome/scripts/param_grid.json \
     -permute
+python /projects/0/prjs0784/sex-differences-microbiome/scripts/XGBeast.py \
+    -name male_premen \
+    -path /projects/0/prjs0784/sex-differences-microbiome/male_premen \
+    -x class \
+    -n 200 \
+    -t 24 \
+    -rand_seed 4321 \
+    -param /projects/0/prjs0784/sex-differences-microbiome/scripts/param_grid.json 
+python /projects/0/prjs0784/sex-differences-microbiome/scripts/XGBeast.py \
+    -name male_postmen \
+    -path /projects/0/prjs0784/sex-differences-microbiome/male_postmen \
+    -x class \
+    -n 200 \
+    -t 24 \
+    -rand_seed 4321 \
+    -param /projects/0/prjs0784/sex-differences-microbiome/scripts/param_grid.json 
