@@ -4,6 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(ggsci)
 library(stringr)
+library(ggpubr)
 
 theme_Publication <- function(base_size=14, base_family="sans") {
     library(grid)
@@ -97,7 +98,8 @@ plot_feature_importance_pathways(path_true, 20)
 plot_features_tests_pathways(data_path, path_true, top_n=20, labels)
 plot_features_top_pathways(data_path, path_true, top_n=20, nrow=4, labels)
 
-df <- readRDS('data/clinicaldata_shotgun.RDS') %>% mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
+df <- readRDS('data/clinicaldata_shotgun.RDS') %>% 
+          mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
 pathwaysfilt <- readRDS("data/pathways_filtered.RDS")
 pathwaysofinterest <- c("PPGPPMET-PWY", "PHOSLIPSYN-PWY", "PYRIDOXSYN-PWY", "PWY-5030")
 pathwaysfilt <- pathwaysfilt %>% filter(rownames(.) %in% pathwaysofinterest)
@@ -111,13 +113,13 @@ pyri <- pyri %>% dplyr::select(everything(.), "ppGp metabolism" = `PPGPPMET-PWY`
 dfpaths <- inner_join(df, pyri, by = "ID")
 dfpaths <- dfpaths %>% mutate(Menopause_Sex = case_when(
     Sex == "Men" & Age < 50 ~ "Men <50",
-    Sex == "Men" & Age >= 50 ~ "Men >50",
+    Sex == "Men" & Age >= 50 ~ "Men >=50",
     MenopauseYn == "Postmenopausal" ~ "Postmenopausal",
     MenopauseYn == "Premenopausal" ~ "Premenopausal"
 ),
 Menopause_Sex = as.factor(Menopause_Sex),
 Menopause_Sex = fct_relevel(Menopause_Sex, "Postmenopausal", after = 3L),
-Menopause_Sex = fct_relevel(Menopause_Sex, "Younger men", after = 0L)
+Menopause_Sex = fct_relevel(Menopause_Sex, "Men <50", after = 0L)
 )
 
 pathli <- list()
@@ -125,15 +127,18 @@ for(path in names(dfpaths)[59:62]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     lab_y <- log10(max(dfpaths$pathid))*1.05
-    comp <- list(c("Men <50", "Men >50"), c("Men <50", "Premenopausal"), c("Premenopausal", "Postmenopausal"),
-                 c("Men >50", "Postmenopausal"))
+    comp <- list(c("Men <50", "Men >=50"), 
+                 c("Men <50", "Premenopausal"), 
+                 c("Premenopausal", "Postmenopausal"),
+                 c("Men >=50", "Postmenopausal"))
     pl <- ggplot(data = dfpaths, aes(x = Menopause_Sex, 
                                      y = pathid)) +
         scale_y_log10()+
         geom_violin(aes(fill = Menopause_Sex)) +
         geom_boxplot(fill = "white", width = 0.2, outlier.shape = NA) +
         scale_fill_manual(values = pal_nejm()(4)[c(4,3,2,1)], guide = "none") +
-        stat_compare_means(label.y = lab_y, comparisons = comp, label = "p.signif",
+        stat_compare_means(label.y = lab_y, comparisons = comp, method = "wilcox.test",
+                           # label = "p.signif",
                            step.increase = 0.07, tip.length = 0) +
         labs(fill = "", x = "", y = "Relative abundance (cpm)", title = path) +
         theme_Publication() +
