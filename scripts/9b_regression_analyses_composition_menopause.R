@@ -58,7 +58,7 @@ pred_menopause_composition <- rio::import("data/menopause_composition_feature_im
 rownames(pred_menopause_composition) <- pred_menopause_composition$FeatName
 
 ## Regression analyses menopause
-# Model 1 (Crude)
+# Model 1 (Unadjusted)
 pred_menopause_composition <- pred_menopause_composition %>% slice_head(n = 20)
 
 Model1menopause <- data.frame()
@@ -74,7 +74,7 @@ Model1menopause$LWR <- Model1menopause$Estimate - 1.96*Model1menopause$Std..Erro
 Model1menopause$UPR <- Model1menopause$Estimate + 1.96*Model1menopause$Std..Error
 Model1menopause <- Model1menopause %>%
   select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1menopause$Model <- "Crude"
+Model1menopause$Model <- "Unadjusted"
 write.table(Model1menopause, "clipboard", sep="\t", dec=",", col.names=NA)
 Model1menopause <- Model1menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
 write.csv2(Model1menopause, "results/Model1menopause.csv")
@@ -134,11 +134,28 @@ forest_plot_menopause <- ggplot(Modelmenopause, aes(x = Estimate, y = fct_rev(fc
   theme(axis.ticks.x = element_blank(),
         axis.title.y = element_blank(),
         legend.position = 'right') +
-  scale_color_nejm(breaks=c('Crude', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for females") + 
+  scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
+  labs(x = "Estimate and 95% CI for postmenopausal women") + 
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
   scale_x_continuous(breaks = seq(-2,2, by = 0.5))
 forest_plot_menopause
+
+forest_plot_menopause <- forest_plot_menopause + ggtitle("Best predicting microbes for menopause") + theme(plot.title = element_text(size = 15))
+forest_plot_menopause
+
+## Combine with plot for sex
+forest_plot_sexmenopause <- ggarrange(
+  forest_plot_sex,
+  forest_plot_menopause,
+  labels = c("A", "B"),
+  common.legend = TRUE, 
+  legend = "right",
+  ncol = 1,
+  align = "v"
+)
+forest_plot_sexmenopause
+ggsave("results/forest_plot_sexmenopausecomposition.tiff", plot=forest_plot_sexmenopause, units="in", width=12, height=12, dpi=600, compression = 'lzw')
+
 
 

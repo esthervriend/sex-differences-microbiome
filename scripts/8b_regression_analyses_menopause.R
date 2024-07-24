@@ -133,7 +133,7 @@ forest_plot_menopause <- ggplot(Modelmenopause, aes(x = Estimate, y = fct_rev(fc
         axis.title.y = element_blank(),
         legend.position = 'right') +
   scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for postmenopausal women") +
+  labs(x = "Estimate and 95% CI for postmenopausal women") +
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
   scale_x_continuous(breaks = seq(-2,2, by = 0.5)) 

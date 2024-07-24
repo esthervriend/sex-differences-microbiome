@@ -60,7 +60,7 @@ pred_sex_pathway <- rio::import("data/sex_pathways_feature_importance.txt")
 rownames(pred_sex_pathway) <- pred_sex_pathway$FeatName
 
 ## Regression analyses sex
-# Model 1 (Crude)
+# Model 1 (Unadjusted)
 pred_sex_pathway <- pred_sex_pathway %>% slice_head(n = 20)
 
 Model1sex <- data.frame()
@@ -136,7 +136,7 @@ forest_plot_sex <- ggplot(Modelsex, aes(x = Estimate, y = fct_rev(fct_inorder(AS
         axis.title.y = element_blank(),
         legend.position = 'right') +
   scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for women") + 
+  labs(x = "Estimate and 95% CI for women") + 
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
   scale_x_continuous(breaks = seq(-2,2, by = 0.5))
