@@ -58,7 +58,7 @@ pred_sex_composition <- rio::import("data/sex_composition_feature_importance.txt
 rownames(pred_sex_composition) <- pred_sex_composition$FeatName
 
 ## Regression analyses sex
-# Model 1 (Crude)
+# Model 1 (Unadjusted)
 pred_sex_composition <- pred_sex_composition %>% slice_head(n = 20)
 
 Model1sex <- data.frame()
@@ -74,7 +74,7 @@ Model1sex$LWR <- Model1sex$Estimate - 1.96*Model1sex$Std..Error
 Model1sex$UPR <- Model1sex$Estimate + 1.96*Model1sex$Std..Error
 Model1sex <- Model1sex %>%
   select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1sex$Model <- "Crude"
+Model1sex$Model <- "Unadjusted"
 write.table(Model1sex, "clipboard", sep="\t", dec=",", col.names=NA)
 Model1sex <- Model1sex %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
 write.csv2(Model1sex, "results/Model1sex.csv")
@@ -134,11 +134,14 @@ forest_plot_sex <- ggplot(Modelsex, aes(x = Estimate, y = fct_rev(fct_inorder(AS
   theme(axis.ticks.x = element_blank(),
         axis.title.y = element_blank(),
         legend.position = 'right') +
-  scale_color_nejm(breaks=c('Crude', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Log-transformed estimate and 95% CI for females") + 
+  scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
+  labs(x = "Estimate and 95% CI for women") + 
   scale_shape_manual(values = c(16, 1)) +
   guides(color = guide_legend(title = NULL), shape = "none") +
   scale_x_continuous(breaks = seq(-2,2, by = 0.5))
 forest_plot_sex
+
+forest_plot_sex <- forest_plot_sex + ggtitle("Best predicting microbes for sex") + theme(plot.title = element_text(size = 15))
+
 
 

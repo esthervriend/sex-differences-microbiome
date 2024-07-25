@@ -1,8 +1,8 @@
 #### Regression analyses Sex
 
 ## Libraries
-library(phyloseq)
 library(tidyverse)
+library(phyloseq)
 library(ggplot2)
 library(ggpubr)
 library(vegan)
@@ -138,7 +138,7 @@ forest_plot_sex <- ggplot(Modelsex, aes(x = Estimate, y = fct_rev(fct_inorder(AS
           axis.title.y = element_blank(),
           legend.position = 'right') +
     scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-    labs(x = "Log-transformed estimate and 95% CI for women") + 
+    labs(x = "Estimate and 95% CI for women") + 
     scale_shape_manual(values = c(16, 1)) +
     guides(color = guide_legend(title = NULL), shape = "none") +
     scale_x_continuous(breaks = seq(-2,2, by = 0.5))
@@ -147,7 +147,7 @@ forest_plot_sex
 forest_plot_sex <- forest_plot_sex + ggtitle("Best predicting microbes for sex") + theme(plot.title = element_text(size = 15))
 
 
-ggsave("results/forest_plot_sex.tiff", plot=forest_plot_sex, units="in", width=10, height=7, dpi=600, compression = 'lzw')
+ggsave("results/forest_plot_sex.pdf", plot=forest_plot_sex, units="in", width=10, height=7, dpi=1200)
 
 
 
