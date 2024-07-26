@@ -3,14 +3,8 @@
 ## Libraries
 library(phyloseq)
 library(tidyverse)
-library(ggplot2)
 library(ggpubr)
-library(vegan)
-library(rio)
-library(dplyr)
 library(ggsci)
-library(cowplot)
-
 
 ## ggplot theme
 theme_Publication <- function(base_size=14, base_family="sans") {
@@ -33,7 +27,7 @@ theme_Publication <- function(base_size=14, base_family="sans") {
             panel.grid.major = element_line(colour="#f0f0f0"),
             panel.grid.minor = element_blank(),
             legend.key = element_rect(colour = NA),
-            legend.position = "bottom",
+            legend.position = "right",
             # legend.direction = "horizontal",
             legend.key.size= unit(0.2, "cm"),
             legend.spacing  = unit(0, "cm"),
@@ -42,7 +36,8 @@ theme_Publication <- function(base_size=14, base_family="sans") {
             strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
             strip.text = element_text(face="bold")
     ))}
-
+afronden2 <- function(x) return(as.numeric(format(round(x, 2),2)))
+afronden3 <- function(x) return(as.numeric(format(round(x, 3),3)))
 
 ## Load data
 # Clinical data and phyloseq
@@ -54,106 +49,80 @@ dfcomplete <- merge(df, tab, by = "ID")
 tax <- readRDS("data/taxtable_rarefied.RDS")
 
 # Best predictors
-pred_meno <- rio::import("data/feature_importance_menopause.txt")
-rownames(pred_meno) <- pred_meno$FeatName
+pred_meno <- rio::import("data/feature_importance_menopause.txt") %>% slice(1:20)
 
-
-## Regression analyses Menopause
-# Model 1 (Unadjusted)
-pred_meno <- pred_meno %>% slice_head(n = 20)
-
-Model1menopause <- data.frame()
+## Regression analyses menopause
+res <- c()
 for (i in 1:nrow(pred_meno)) {
-  var_name <- pred_meno$FeatName[i]
-  formula <- as.formula(paste("log(", var_name, "+1) ~ MenopauseYn"))
-  coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete))$coef[2,c(1,2,4)]))
-  Model1menopause <- bind_rows(Model1menopause,coef)
+    var_name <- pred_meno$FeatName[i]
+    print(var_name) # print name
+    dfcomplete$dep <- dfcomplete[[var_name]]
+    dfcomplete$logdep <- log(dfcomplete$dep + 1)
+    # inspect distribution
+    print(dfcomplete %>% gghistogram("dep", title = str_c(var_name, " - no log"), fill = "royalblue4"))
+    print(dfcomplete %>% gghistogram("logdep", title = str_c(var_name, " - log+1"), fill = "firebrick"))
+    
+    # run models
+    m0 <- lm(logdep ~ MenopauseYn, data = dfcomplete)
+    m1 <- lm(logdep ~ MenopauseYn + Age + BMI + HT + DM + CurrSmoking, data = dfcomplete)
+    m2 <- lm(logdep ~ MenopauseYn + Age + BMI + HT + DM + CurrSmoking + Sodium + Alcohol + TotalCalories + 
+                 Fibre + Proteins, data = dfcomplete)
+    
+    # extract estimates for variable sex
+    m0 <- tidy(m0, conf.int=T)[2,]
+    m1 <- tidy(m1, conf.int=T)[2,]
+    m2 <- tidy(m2, conf.int = T)[2,]
+    
+    # bind results together
+    resRow <- cbind(var_name, m0$estimate, m0$conf.low, m0$conf.high, m0$p.value,
+                    m1$estimate, m1$conf.low, m1$conf.high, m1$p.value,
+                    m2$estimate, m2$conf.low, m2$conf.high, m2$p.value)
+    colnames(resRow) <- c("microbe", 
+                          "m0-est", "m0-l95", "m0-u95", "m0-p", 
+                          "m1-est", "m1-l95", "m1-u95", "m1-p",
+                          "m2-est", "m2-l95", "m2-u95", "m2-p")
+    
+    # add results row to final table
+    res <- rbind(res, resRow)
+    dfcomplete$dep <- NULL
 }
-Model1menopause$Pr...t.. <- p.adjust(Model1menopause$Pr...t.., method = "fdr", n = length(Model1menopause$Pr...t..))
-Model1menopause$LWR <- Model1menopause$Estimate - 1.96*Model1menopause$Std..Error
-Model1menopause$UPR <- Model1menopause$Estimate + 1.96*Model1menopause$Std..Error
-Model1menopause <- Model1menopause %>%
-  select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1menopause$Model <- "Unadjusted"
-Model1menopause$ASV <- make.unique(tax$Tax[match(Model1menopause$ASV, tax$ASV)])
-write.table(Model1menopause, "clipboard", sep="\t", dec=",", col.names=NA)
-Model1menopause <- Model1menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model1menopause, "results/Model1menopause.csv")
 
-# Model 2 (+ Age & CVD)
-Model2menopause <- data.frame()
-for (i in 1:nrow(pred_meno)) {
-  var_name <- pred_meno$FeatName[i]
-  formula <- as.formula(paste("log(", var_name, "+1) ~ MenopauseYn + HT + DM + CurrSmoking"))
-  coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete))$coef[2,c(1,2,4)]))
-  Model2menopause <- bind_rows(Model2menopause,coef)
-}
-Model2menopause$Pr...t.. <- p.adjust(Model2menopause$Pr...t.., method = "fdr", n = length(Model2menopause$Pr...t..))
-Model2menopause$LWR <- Model2menopause$Estimate - 1.96*Model2menopause$Std..Error
-Model2menopause$UPR <- Model2menopause$Estimate + 1.96*Model2menopause$Std..Error
-Model2menopause <- Model2menopause %>%
-  select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model2menopause$Model <- "+Age, BMI, HT, DM, smoking"
-Model2menopause$ASV <- make.unique(tax$Tax[match(Model2menopause$ASV, tax$ASV)])
-write.table(Model2menopause, "clipboard", sep="\t", dec=",", col.names=NA)
-Model2menopause <- Model2menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model2menopause, "results/Model2menopause.csv")
+res2 <- as.data.frame(res) %>% 
+    mutate(across(c(2:13), ~as.numeric(as.character(.x)))) %>% # first to char, then num
+    mutate(`m0-q` = p.adjust(`m0-p`, 'fdr'), # p adjust 
+           `m1-q` = p.adjust(`m1-p`, 'fdr'),
+           `m2-q` = p.adjust(`m2-p`, 'fdr')) %>% 
+    mutate(across(c(5,9,13), afronden3), # round p values at 3 digits
+           across(c(2:4, 6:8, 10:12), afronden2)) # round estimates at 2 digits
+openxlsx::write.xlsx(res2, "results/lm/lm_menopause_16s.xlsx")
 
+res3 <- res2 %>% mutate(microbe = make.unique(tax$Tax[match(microbe, tax$ASV)])) %>% 
+    pivot_longer(c(2:16), names_to=c("model", "cat"), names_prefix="m", 
+                              names_sep='-', values_to="value") %>% # to have models in long format
+    pivot_wider(names_from = cat, values_from = value) %>% # but est+l95/u95 to wide
+    mutate(model = factor(model, levels = c("0", "1", "2"), # label models
+                          labels = c("Unadjusted", "+Age, BMI, HT, DM, Smoking", "+Diet")),
+           model = fct_inorder(model),
+           microbe = fct_rev(fct_inorder(microbe)),
+           sigq = case_when(q < 0.05 ~ paste0("q<0.05"), q >= 0.05 ~ paste0("not sig")),
+           sigq = as.factor(sigq)
+    )
 
-# Model 3 (+ Age & CVD & diet)
-Model3menopause <- data.frame()
-for (i in 1:nrow(pred_meno)) {
-  var_name <- pred_meno$FeatName[i]
-  formula <- as.formula(paste("log(", var_name, "+1) ~ MenopauseYn + Age + BMI + HT + DM + CurrSmoking + Alcohol + TotalCalories + Fibre"))
-  coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete))$coef[2,c(1,2,4)]))
-  Model3menopause <- bind_rows(Model3menopause,coef)
-}
-Model3menopause$Pr...t.. <- p.adjust(Model3menopause$Pr...t.., method = "fdr", n = length(Model3menopause$Pr...t..))
-Model3menopause$LWR <- Model3menopause$Estimate - 1.96*Model3menopause$Std..Error
-Model3menopause$UPR <- Model3menopause$Estimate + 1.96*Model3menopause$Std..Error
-Model3menopause <- Model3menopause %>%
-  select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model3menopause$Model <- "+Diet"
-Model3menopause$ASV <- make.unique(tax$Tax[match(Model3menopause$ASV, tax$ASV)])
-write.table(Model3menopause, "clipboard", sep="\t", dec=",", col.names=NA)
-Model3menopause <- Model3menopause %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model3menopause, "results/Model3menopause.csv")
-
-## Combine datasets
-Modelmenopause <- rbind(Model1menopause, Model2menopause, Model3menopause)
-Modelmenopause[, c(2,3,4,5)] <- lapply(Modelmenopause[, c(2,3,4,5)], as.numeric)
-
-## Make ggplot
-forest_plot_menopause <- ggplot(Modelmenopause, aes(x = Estimate, y = fct_rev(fct_inorder(ASV)), color = fct_rev(fct_inorder(Model)), shape = Pvalue > 0.05)) +
-  geom_point(position = position_dodge(width = 0.6), size = 2.0) +
-  geom_vline(aes(xintercept = 0), size = .50, linetype = "dashed") + 
-  geom_errorbarh(aes(xmin = LWR, xmax = UPR), height = 0.5, position = position_dodge(width = 0.6)) +
-  theme_Publication() +
-  theme(axis.ticks.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'right') +
-  scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-  labs(x = "Estimate and 95% CI for postmenopausal women") +
-  scale_shape_manual(values = c(16, 1)) +
-  guides(color = guide_legend(title = NULL), shape = "none") +
-  scale_x_continuous(breaks = seq(-2,2, by = 0.5)) 
-forest_plot_menopause
-
-forest_plot_menopause <- forest_plot_menopause + ggtitle("Best predicting microbes for menopause") + theme(plot.title = element_text(size = 15))
-forest_plot_menopause
-
-ggsave("results/forest_plot_menopause.tiff", plot=forest_plot_menopause, units="in", width=10, height=7, dpi=600, compression = 'lzw')
-
-## Combine with plot for sex
-forest_plot_sexmenopause <- ggarrange(
-  forest_plot_sex,
-  forest_plot_menopause,
-  labels = c("A", "B"),
-  common.legend = TRUE, 
-  legend = "right",
-  ncol = 1,
-   align = "v"
+## Make forestplot
+(forest_16s_meno <- ggplot(res3, aes(x = est, y = microbe, color = model, shape = sigq)) +
+        geom_point(position = position_dodge(-0.5), size = 2.0) +
+        geom_vline(aes(xintercept = 0), linewidth = .50, linetype = "dashed") + 
+        geom_errorbarh(aes(xmin = l95, xmax = u95), height = 0.5, 
+                       position = position_dodge(-0.5)) +
+        scale_x_continuous(breaks = seq(-1, 1, by = 0.25)) +
+        scale_color_nejm() +
+        scale_shape_manual(values = c(1, 16)) +
+        labs(title = "Best predicting microbes for menopause",
+             x = "Estimate and 95% CI for postmenopausal women", y = "", color = "", shape = "") + 
+        theme_Publication()
 )
-forest_plot_sexmenopause
-ggsave("results/forest_plot_sexmenopause.tiff", plot=forest_plot_sexmenopause, units="in", width=12, height=12, dpi=600, compression = 'lzw')
+ggsave("results/lm/lm_16s_menopause.pdf", width = 10, height = 8)
 
+ggarrange(forest_16s_sex, forest_16s_meno, labels = c("A", "B"), common.legend = TRUE, nrow = 2,
+          legend = "right")
+ggsave("results/lm/lm_16s_total.pdf", width = 11, height = 16)
