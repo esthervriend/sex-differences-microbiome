@@ -65,6 +65,7 @@ print('Select pathways with abundance >50 cpm')
 sums <- as.data.frame(rowSums(pathways2))
 colnames(sums) <- "prev"
 sums <- sums %>% mutate(prev = prev / 297)
+# tk <- apply(pathways2, 1, function(x) sum(x > 50) > (0.3*length(x)))
 sumsprev <- sums %>% filter(prev > 50) %>% print()
 pathwaysprev <- rownames(sumsprev)
 
