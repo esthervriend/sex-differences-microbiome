@@ -126,7 +126,8 @@ plot_features_tests_pathways <- function(input_path, output_path, top_n=10, labe
             geom_boxplot(width=0.1, fill="white")+
             theme_Publication()+
             theme(legend.position = 'none')+
-            ggpubr::stat_compare_means(comparisons = comps, paired = F)+
+            ggpubr::stat_compare_means(comparisons = comps, paired = F, method = "wilcox.test",
+                                       tip.length = 0)+
             xlab('Group')+
             ylab('Relative abundance (cpm)')+
             ggtitle(tax_asv)
@@ -204,7 +205,8 @@ plot_features_top_pathways <- function(input_path, output_path, top_n=20, nrow=4
         theme_Publication()+
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)')+
-        ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0))+
+        ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0), 
+                                   method = "wilcox.test", tip.length = 0)+
         facet_wrap(~ features, nrow=nrow, scales = 'free')
     pl
     # ggsave(pl, path = plot_path, filename = paste0('top_',top_n,'_features.pdf'), device = 'pdf', width=15, height = 14)
