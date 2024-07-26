@@ -23,7 +23,7 @@ Table1 <- print(Table1, contDigits = 1, nonnormal = nonnormal, missing = TRUE)
 Table1 <- as.data.frame(Table1)
 write.table(Table1, "clipboard", sep="\t", dec=",", col.names=NA)
 Table1 <- Table1 %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Table1, "results/Table1.csv")
+write.csv2(Table1, "results/tables/Table1.csv")
 
 ## Supplementary table 1 menopausal status
 nonnormal <- c("Age", "MenopauseDuration", "Sodium", "AlcoholIntake", "TotalCalories")
@@ -38,7 +38,7 @@ Table2 <- print(Table2, contDigits = 1, nonnormal = nonnormal, missing = TRUE)
 Table2 <- as.data.frame(Table2)
 write.table(Table2, "clipboard", sep="\t", dec=",", col.names=NA)
 Table2 <- Table2 %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Table2, "results/Table2.csv")
+write.csv2(Table2, "results/tables/Table2.csv")
 
 
 ## Shotgun data ####
@@ -63,7 +63,7 @@ Table1 <- print(Table1, contDigits = 1, nonnormal = nonnormal, missing = TRUE)
 Table1 <- as.data.frame(Table1)
 #write.table(Table1, "clipboard", sep="\t", dec=",", col.names=NA)
 Table1 <- Table1 %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Table1, "results/Table1_shotgun.csv")
+write.csv2(Table1, "results/tables/Table1_shotgun.csv")
 
 ## Table 2 menopausal status
 nonnormal <- c("Age", "MenopauseDuration")
@@ -78,4 +78,4 @@ Table2 <- print(Table2, contDigits = 1, nonnormal = nonnormal, missing = TRUE)
 Table2 <- as.data.frame(Table2)
 #write.table(Table2, "clipboard", sep="\t", dec=",", col.names=NA)
 Table2 <- Table2 %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Table2, "results/Table2_shotgun.csv")
+write.csv2(Table2, "results/tables/Table2_shotgun.csv")
