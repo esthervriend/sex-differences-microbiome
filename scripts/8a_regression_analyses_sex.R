@@ -5,15 +5,9 @@ library(tidyverse)
 library(phyloseq)
 library(ggplot2)
 library(ggpubr)
-library(vegan)
-library(rio)
-library(dplyr)
 library(ggsci)
-library(cowplot)
-library(forcats)
 
-
-## ggplot theme
+## Functions
 theme_Publication <- function(base_size=14, base_family="sans") {
     library(grid)
     library(ggthemes)
@@ -34,7 +28,7 @@ theme_Publication <- function(base_size=14, base_family="sans") {
                 panel.grid.major = element_line(colour="#f0f0f0"),
                 panel.grid.minor = element_blank(),
                 legend.key = element_rect(colour = NA),
-                legend.position = "bottom",
+                legend.position = "right",
                 # legend.direction = "horizontal",
                 legend.key.size= unit(0.2, "cm"),
                 legend.spacing  = unit(0, "cm"),
@@ -43,6 +37,8 @@ theme_Publication <- function(base_size=14, base_family="sans") {
                 strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
                 strip.text = element_text(face="bold")
         ))}
+afronden2 <- function(x) return(as.numeric(format(round(x, 2),2)))
+afronden3 <- function(x) return(as.numeric(format(round(x, 3),3)))
 
 ## Load data
 # Clinical data and phyloseq
@@ -54,100 +50,76 @@ dfcomplete <- merge(df, tab, by = "ID")
 tax <- readRDS("data/taxtable_rarefied.RDS")
 
 # Best predictors
-pred_sex <- rio::import("data/feature_importance_sex.txt")
-rownames(pred_sex) <- pred_sex$FeatName
-
-## Determine transformation
-hist(dfcomplete$ASV_1, breaks = 60)
-hist(log(dfcomplete$ASV_1 + 1), breaks = 60)
+pred_sex <- rio::import("data/feature_importance_sex.txt") %>% slice(1:20)
 
 ## Regression analyses sex
-# Model 1 (Unadjusted)
-pred_sex <- pred_sex %>% slice_head(n = 20)
-
-Model1sex <- data.frame()
-for (i in 1:nrow(pred_sex)) {
- var_name <- pred_sex$FeatName[i]
- formula <- as.formula(paste("log(", var_name, "+1) ~ Sex"))
- coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete ))$coef[2,c(1,2,4)]))
- Model1sex <- bind_rows(Model1sex,coef)
-}
-Model1sex$Pr...t.. <- p.adjust(Model1sex$Pr...t.., method = "fdr", n = length(Model1sex$Pr...t..))
-Model1sex$LWR <- Model1sex$Estimate - 1.96*Model1sex$Std..Error
-Model1sex$UPR <- Model1sex$Estimate + 1.96*Model1sex$Std..Error
-Model1sex <- Model1sex %>%
-    select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model1sex$Model <- "Unadjusted"
-write.table(Model1sex, "clipboard", sep="\t", dec=",", col.names=NA)
-Model1sex <- Model1sex %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model1sex, "results/Model1sex.csv")
-
-# Model 2 (+ Age & CVD)
-Model2sex <- data.frame()
+res <- c()
 for (i in 1:nrow(pred_sex)) {
     var_name <- pred_sex$FeatName[i]
-    formula <- as.formula(paste("log(", var_name, "+1) ~ Sex + Age + BMI + HT + DM + CurrSmoking"))
-    coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete ))$coef[2,c(1,2,4)]))
-    Model2sex <- bind_rows(Model2sex,coef)
+    print(var_name) # print name
+    dfcomplete$dep <- dfcomplete[[var_name]]
+    dfcomplete$logdep <- log(dfcomplete$dep + 1)
+    # inspect distribution
+    print(dfcomplete %>% gghistogram("dep", title = str_c(var_name, " - no log"), fill = "royalblue4"))
+    print(dfcomplete %>% gghistogram("logdep", title = str_c(var_name, " - log+1"), fill = "firebrick"))
+    
+    # run models
+    m0 <- lm(logdep ~ Sex, data = dfcomplete)
+    m1 <- lm(logdep ~ Sex + Age + BMI + HT + DM + CurrSmoking, data = dfcomplete)
+    m2 <- lm(logdep ~ Sex + Age + BMI + HT + DM + CurrSmoking + Sodium + Alcohol + TotalCalories + 
+                 Fibre + Proteins, data = dfcomplete)
+    
+    # extract estimates for variable sex
+    m0 <- tidy(m0, conf.int=T)[2,]
+    m1 <- tidy(m1, conf.int=T)[2,]
+    m2 <- tidy(m2, conf.int = T)[2,]
+    
+    # bind results together
+    resRow <- cbind(var_name, m0$estimate, m0$conf.low, m0$conf.high, m0$p.value,
+                    m1$estimate, m1$conf.low, m1$conf.high, m1$p.value,
+                    m2$estimate, m2$conf.low, m2$conf.high, m2$p.value)
+    colnames(resRow) <- c("microbe", 
+                          "m0-est", "m0-l95", "m0-u95", "m0-p", 
+                          "m1-est", "m1-l95", "m1-u95", "m1-p",
+                          "m2-est", "m2-l95", "m2-u95", "m2-p")
+    
+    # add results row to final table
+    res <- rbind(res, resRow)
+    dfcomplete$dep <- NULL
 }
-Model2sex$Pr...t.. <- p.adjust(Model2sex$Pr...t.., method = "fdr", n = length(Model2sex$Pr...t..))
-Model2sex$LWR <- Model2sex$Estimate - 1.96*Model2sex$Std..Error
-Model2sex$UPR <- Model2sex$Estimate + 1.96*Model2sex$Std..Error
-Model2sex <- Model2sex %>%
-    select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model2sex$Model <- "+Age, BMI, HT, DM, smoking"
-write.table(Model2sex, "clipboard", sep="\t", dec=",", col.names=NA)
-Model2sex <- Model2sex %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model2sex, "results/Model2sex.csv")
 
+res2 <- as.data.frame(res) %>% 
+    mutate(across(c(2:13), ~as.numeric(as.character(.x)))) %>% # first to char, then num
+    mutate(`m0-q` = p.adjust(`m0-p`, 'fdr'), # p adjust 
+           `m1-q` = p.adjust(`m1-p`, 'fdr'),
+           `m2-q` = p.adjust(`m2-p`, 'fdr')) %>% 
+    mutate(across(c(5,9,13), afronden3), # round p values at 3 digits
+           across(c(2:4, 6:8, 10:12), afronden2)) # round estimates at 2 digits
+openxlsx::write.xlsx(res2, "results/lm/lm_sex_16s.xlsx")
 
-# Model 3 (+ Age & CVD & diet)
-Model3sex <- data.frame()
-for (i in 1:nrow(pred_sex)) {
-    var_name <- pred_sex$FeatName[i]
-    formula <- as.formula(paste("log(", var_name, "+1) ~ Sex + Age + BMI + HT + DM + CurrSmoking + Sodium + Alcohol + TotalCalories + Fibre"))
-    coef <- data.frame(var_name,t(summary(lm(formula, data = dfcomplete ))$coef[2,c(1,2,4)]))
-    Model3sex <- bind_rows(Model3sex,coef)
-}
-Model3sex$Pr...t.. <- p.adjust(Model3sex$Pr...t.., method = "fdr", n = length(Model3sex$Pr...t..))
-Model3sex$LWR <- Model3sex$Estimate - 1.96*Model3sex$Std..Error
-Model3sex$UPR <- Model3sex$Estimate + 1.96*Model3sex$Std..Error
-Model3sex <- Model3sex %>%
-    select(ASV=var_name, Estimate, LWR, UPR, Pvalue=Pr...t..)
-Model3sex$Model <- "+Diet"
-write.table(Model3sex, "clipboard", sep="\t", dec=",", col.names=NA)
-Model3sex <- Model3sex %>% mutate(across(everything(.), ~trimws(.x, which = "both")))
-write.csv2(Model3sex, "results/Model3sex.csv")
+res3 <- res2 %>% pivot_longer(c(2:16), names_to=c("model", "cat"), names_prefix="m", 
+                              names_sep='-', values_to="value") %>% # to have models in long format
+    pivot_wider(names_from = cat, values_from = value) %>% # but est+l95/u95 to wide
+    mutate(model = factor(model, levels = c("0", "1", "2"), # label models
+                          labels = c("Unadjusted", "+Age, BMI, HT, DM, Smoking", "+Diet")),
+           model = fct_inorder(model),
+           microbe = tax$Tax[match(microbe, tax$ASV)], # change name to tidy tax
+           microbe = fct_rev(fct_inorder(microbe)),
+           sigq = case_when(q < 0.05 ~ paste0("q<0.05"), q >= 0.05 ~ paste0("not sig")),
+           sigq = as.factor(sigq)
+    )
 
-## Combine datasets
-Modelsex <- rbind(Model1sex, Model2sex, Model3sex)
-Modelsex[, c(2,3,4,5)] <- lapply(Modelsex[, c(2,3,4,5)], as.numeric)
-
-
-## Change ASV names to taxonomy
-Modelsex$ASV <- tax$Tax[match(Modelsex$ASV, tax$ASV)]
-
-
-## Make ggplot
-forest_plot_sex <- ggplot(Modelsex, aes(x = Estimate, y = fct_rev(fct_inorder(ASV)), color = fct_rev(fct_inorder(Model)), shape = Pvalue > 0.05)) +
-    geom_point(position = position_dodge(width = 0.6), size = 2.0) +
-    geom_vline(aes(xintercept = 0), size = .50, linetype = "dashed") + 
-    geom_errorbarh(aes(xmin = LWR, xmax = UPR), height = 0.5, position = position_dodge(width = 0.6)) +
-    theme_Publication() +
-    theme(axis.ticks.x = element_blank(),
-          axis.title.y = element_blank(),
-          legend.position = 'right') +
-    scale_color_nejm(breaks=c('Unadjusted', '+Age, BMI, HT, DM, smoking', '+Diet')) +
-    labs(x = "Estimate and 95% CI for women") + 
-    scale_shape_manual(values = c(16, 1)) +
-    guides(color = guide_legend(title = NULL), shape = "none") +
-    scale_x_continuous(breaks = seq(-2,2, by = 0.5))
-forest_plot_sex
-
-forest_plot_sex <- forest_plot_sex + ggtitle("Best predicting microbes for sex") + theme(plot.title = element_text(size = 15))
-
-
-ggsave("results/forest_plot_sex.pdf", plot=forest_plot_sex, units="in", width=10, height=7, dpi=1200)
-
-
-
+## Make forestplot
+(forest_16s_sex <- ggplot(res3, aes(x = est, y = microbe, color = model, shape = sigq)) +
+        geom_point(position = position_dodge(-0.5), size = 2.0) +
+        geom_vline(aes(xintercept = 0), linewidth = .50, linetype = "dashed") + 
+        geom_errorbarh(aes(xmin = l95, xmax = u95), height = 0.5, 
+                       position = position_dodge(-0.5)) +
+        scale_x_continuous(breaks = seq(-2, 0.75, by = 0.5)) +
+        scale_color_nejm() +
+        scale_shape_manual(values = c(1, 16)) +
+        labs(title = "Best predicting microbes for sex",
+             x = "Estimate and 95% CI for women", y = "", color = "", shape = "") + 
+        theme_Publication()
+)
+ggsave("results/lm/lm_16s_sex.pdf", width = 10, height = 8)
