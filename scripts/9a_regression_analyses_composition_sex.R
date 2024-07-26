@@ -60,7 +60,7 @@ for (i in 1:nrow(pred_sex_composition)) {
   var_name <- pred_sex_composition$FeatName[i]
   print(var_name) # print name
   dfcomplete$dep <- dfcomplete[[var_name]]
-  dfcomplete$logdep <- log(dfcomplete$dep + 1)
+  dfcomplete$logdep <- log(dfcomplete$dep + 0.01)
   # inspect distribution
   # print(dfcomplete %>% gghistogram("dep", title = str_c(var_name, " - no log"), fill = "royalblue4"))
   # print(dfcomplete %>% gghistogram("logdep", title = str_c(var_name, " - log+1"), fill = "firebrick"))
