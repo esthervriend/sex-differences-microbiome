@@ -42,9 +42,9 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance', title = path)+
+        labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4)+
+                                   paired = F, size = 4, method = "wilcox.test")+
         scale_y_log10() + 
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -85,9 +85,9 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance', title = path)+
+        labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4)+
+                                   paired = F, size = 4, method = "wilcox.test")+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -128,9 +128,9 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance', title = path)+
+        labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4)+
+                                   paired = F, size = 4, method = "wilcox.test")+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -169,9 +169,9 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance', title = path)+
+        labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4)+
+                                   paired = F, size = 4, method = "wilcox.test")+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -211,9 +211,9 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance', title = path)+
+        labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4)+
+                                   paired = F, size = 4, method = "wilcox.test")+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
