@@ -57,14 +57,11 @@ saveRDS(cladesplit, "data/shotgun_taxtable.RDS")
 abundance2$clade_name <- NULL
 
 # inspect abundance
-sums <- as.data.frame(rowSums(abundance2))
-colnames(sums) <- "prev"
-sums <- sums %>% mutate(prev = prev / 297)
-hist(log10(sums$prev))
-sums %>% filter(log10(prev) > -2) %>% count(.)
+tk <- apply(abundance2, 1, function(x) sum(x > 0.1) > (0.25*length(x)))
+summary(tk)
 
 # select pathways
-abundance2 <- abundance2 %>% filter(log10(rowSums(.) / 297) > -2)
+abundance2 <- abundance2[tk,]
 abundance2 <- t(as.matrix(abundance2))
 saveRDS(abundance2, "data/shotgun_abundance.RDS")
 
@@ -103,14 +100,11 @@ rownames(abundance2) <- abundance2$clade_name
 abundance2$clade_name <- NULL
 
 # inspect abundance
-sums <- as.data.frame(rowSums(abundance2))
-colnames(sums) <- "prev"
-sums <- sums %>% mutate(prev = prev / 297)
-hist(log10(sums$prev))
-sums %>% filter(log10(prev) > -2) %>% count(.)
+tk <- apply(abundance2, 1, function(x) sum(x > 0.1) > (0.25*length(x)))
+summary(tk)
 
 # select pathways
-abundance2 <- abundance2 %>% filter(log10(rowSums(.) / 297) > -2)
+abundance2 <- abundance2[tk,]
 abundance2 <- t(as.matrix(abundance2))
 
 # Put clinical data and microbiome data in same sequence of IDs
