@@ -278,12 +278,14 @@ plot_features_tests_top <- function(input_path, output_path, top_n=20, nrow=4, l
     df <- df %>% mutate(y = factor(y),
                         features = as.factor(features),
                         features = fct_inorder(features),
-                        values = values / 200
+                        values = (values / 20000)*100
     )
     comps <- list(c(labels[1], labels[2]))
-    pl <- ggplot(df, aes(x=y, y=values+0.01))+
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(1,2)]),
+                            .default = c(pal_nejm()(4)[3:4]))
+    pl <- ggplot(df, aes(x=y, y=values+0.001))+
         geom_violin(aes(fill=y), trim = TRUE)+
-        scale_fill_nejm(guide = FALSE) +
+        scale_fill_manual(values = colorguide, guide = FALSE) +
         geom_boxplot(width=0.1, fill="white", outlier.shape = NA)+
         scale_y_log10() +
         theme_Publication()+

@@ -112,7 +112,7 @@ plot_features_tests_pathways <- function(input_path, output_path, top_n=10, labe
     dd$y <- factor(ifelse(dd$y==1, labels[1],labels[2]))
     dd$y <- fct_rev(dd$y)
     comps <- list(c(labels[1],labels[2]))
-    colorguide <- case_when("Female" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
                             .default = c(pal_nejm()(4)[3:4]))
     #print(colorguide)
     for(j in 1:length(features_tk)){
@@ -165,7 +165,7 @@ plot_features_top_pathways <- function(input_path, output_path, top_n=20, nrow=4
                     # legend.title = element_text(face="italic"),
                     plot.margin=unit(c(10,5,5,5),"mm"),
                     strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
-                    strip.text = element_text(face="bold", size = rel(0.8))
+                    strip.text = element_text(face="bold", size = rel(0.5))
             ))
         
     } 
@@ -194,7 +194,7 @@ plot_features_top_pathways <- function(input_path, output_path, top_n=20, nrow=4
                         features = fct_inorder(features),
                         values = values
     )
-    colorguide <- case_when("Female" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
                             .default = c(pal_nejm()(4)[3:4]))
     comps <- list(c(labels[1], labels[2]))
     pl <- ggplot(df, aes(x=y, y=values))+
@@ -402,7 +402,7 @@ plot_features_tests_shotgun <- function(input_path, output_path, top_n=10, label
             theme(legend.position = 'none')+
             ggpubr::stat_compare_means(comparisons = comps, paired = F)+
             xlab('Group')+
-            ylab('Relative abundance (cpm)')+
+            ylab('Relative abundance (%)')+
             scale_y_log10() + 
             ggtitle(tax_asv)
         cat(j, tax_asv, '\n')
@@ -477,7 +477,7 @@ plot_features_top_shotgun <- function(input_path, output_path, top_n=20, nrow=4,
         geom_boxplot(width=0.1, fill="white")+
         theme_Publication()+
         theme(legend.position = 'none')+
-        labs(x='Group', y = 'Relative abundance (cpm)')+
+        labs(x='Group', y = 'Relative abundance (%)')+
         ggpubr::stat_compare_means(comparisons = comps, paired = F, size = rel(3.0))+
         scale_y_log10() +
         facet_wrap(~ features, nrow=nrow, scales = 'free')
