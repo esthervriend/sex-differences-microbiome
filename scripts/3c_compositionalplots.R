@@ -41,34 +41,9 @@ theme_composition <- function(base_size=14, base_family="sans") {
     
 }
 
-theme_Publication <- function(base_size=14, base_family="sans") {
-    library(grid)
-    library(ggthemes)
-    library(stringr)
-    (theme_foundation(base_size=base_size, base_family=base_family)
-        + theme(plot.title = element_text(face = "bold",
-                                          size = rel(0.8), hjust = 0.5),
-                text = element_text(),
-                panel.background = element_rect(colour = NA),
-                plot.background = element_rect(colour = NA),
-                panel.border = element_rect(colour = NA),
-                axis.title = element_text(face = "bold",size = rel(0.8)),
-                axis.title.y = element_text(angle=90,vjust =2),
-                axis.title.x = element_text(vjust = -0.2),
-                axis.text = element_text(), 
-                axis.line = element_line(colour="black"),
-                axis.ticks = element_line(),
-                panel.grid.major = element_line(colour="#f0f0f0"),
-                panel.grid.minor = element_blank(),
-                legend.key = element_rect(colour = NA),
-                legend.position = "bottom",
-                legend.key.size= unit(0.2, "cm"),
-                legend.spacing  = unit(0, "cm"),
-                plot.margin=unit(c(10,5,5,5),"mm"),
-                strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
-                strip.text = element_text(face="bold")
-        ))
-} 
+## Output folder
+resultsfolder <- "results/descriptives"
+dir.create(resultsfolder, showWarnings = FALSE)
 
 ## Open data
 phyloseqrare <- readRDS("data/phyloseq_sampledata.RDS")
@@ -130,8 +105,8 @@ comp_genus <- dx_genus %>%
     labs(y="Composition (%)", x = "", title = "Sex", fill = "") +
     scale_y_continuous(expand = c(0, 0)) +
     theme_composition()
-ggsave(comp_genus, filename = "results/composition_sex.pdf", width = 8, height = 8)
-ggsave(comp_genus, filename = "results/composition_sex.svg", width = 8, height = 8)
+ggsave(comp_genus, filename = "results/descriptives/composition_sex.pdf", width = 8, height = 8)
+ggsave(comp_genus, filename = "results/descriptives/composition_sex.svg", width = 8, height = 8)
 
 dx_genus <- d %>% mutate(
     Genus2 = case_when(
@@ -165,5 +140,5 @@ comp_genus <- dx_genus %>%
     labs(y="Composition (%)", x = "Menopausal status", title = "Menopause", fill = "") +
     scale_y_continuous(expand = c(0, 0)) +
     theme_composition()
-ggsave(comp_genus, filename = "results/composition_genus_meno.pdf", width = 8, height = 8)
-ggsave(comp_genus, filename = "results/composition_genus_meno.svg", width = 8, height = 8)
+ggsave(comp_genus, filename = "results/descriptives/composition_genus_meno.pdf", width = 8, height = 8)
+ggsave(comp_genus, filename = "results/descriptives/composition_genus_meno.svg", width = 8, height = 8)
