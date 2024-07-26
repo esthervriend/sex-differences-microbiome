@@ -5,6 +5,10 @@ library(tableone)
 library(rio)
 library(dplyr)
 
+## Output folder
+resultsfolder <- "results/tables"
+dir.create(resultsfolder, showWarnings = FALSE)
+
 ## 16S data
 ## Load dataset
 df_new <- rio:: import("data/clinicaldata.RDS")

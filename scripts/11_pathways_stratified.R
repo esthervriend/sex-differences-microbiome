@@ -6,6 +6,10 @@ library(tidyverse)
 library(ggsci)
 library(ggpubr)
 
+## Output folder
+resultsfolder <- "results/pathways"
+dir.create(resultsfolder, showWarnings = FALSE)
+
 ## Clinical data
 df <- readRDS('data/clinicaldata_shotgun.RDS') %>% 
     mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"),
@@ -44,7 +48,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4, method = "wilcox.test")+
+                                   paired = F, size = 4, method = "wilcox.test", tip.length = 0)+
         scale_y_log10() + 
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -52,9 +56,9 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
     dfpaths$pathid <- NULL
 }
 ggarrange(plotlist = pltli, ncol = 3, nrow = 5, labels = LETTERS[1:length(pltli)],
-          common.legend = TRUE)    
-ggsave("results/pyridoxalphos.pdf", width = 12, height = 22)
-ggsave("results/pyridoxalphos.png", width = 12, height = 22)
+          common.legend = TRUE)
+ggsave("results/pathways/pyridoxalphos.pdf", width = 12, height = 22)
+ggsave("results/pathways/pyridoxalphos.png", width = 12, height = 22)
 
 
 #### Histidine pathway ####
@@ -87,7 +91,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4, method = "wilcox.test")+
+                                   paired = F, size = 4, method = "wilcox.test", tip.length = 0)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -96,8 +100,8 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
 }
 ggarrange(plotlist = pltli, ncol = 4, nrow = 5, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)  
-ggsave("results/histidine_pathways.pdf", width = 13, height = 25)
-ggsave("results/histidine_pathways.png", width = 13, height = 25)
+ggsave("results/pathways/histidine_pathways.pdf", width = 13, height = 25)
+ggsave("results/pathways/histidine_pathways.png", width = 13, height = 25)
 
 
 #### Arginine pathway ####
@@ -130,7 +134,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4, method = "wilcox.test")+
+                                   paired = F, size = 4, method = "wilcox.test", tip.length = 0)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -139,7 +143,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
 }
 ggarrange(plotlist = pltli, ncol = 3, nrow = 3, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)  
-ggsave("results/arginine_pathways.pdf", width = 11, height = 14)
+ggsave("results/pathways/arginine_pathways.pdf", width = 11, height = 14)
 
 #### pGpp pathway ####
 ## Open pathway data and tidy
@@ -171,7 +175,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4, method = "wilcox.test")+
+                                   paired = F, size = 4, method = "wilcox.test", tip.length = 0)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
@@ -180,7 +184,7 @@ for(path in names(dfpaths)[59:ncol(dfpaths)]){
 }
 ggarrange(plotlist = pltli, ncol = 2, nrow = 1, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)  
-ggsave("results/pgpp_pathways.pdf", width = 7, height = 5)
+ggsave("results/pathways/pgpp_pathways.pdf", width = 7, height = 5)
 
 
 #### Lactate/ethnanol pathway ####
@@ -213,14 +217,14 @@ for(path in names(dfpaths)[58:ncol(dfpaths)]){
         theme(legend.position = 'none')+
         labs(x='Group', y = 'Relative abundance (cpm)', title = path)+
         ggpubr::stat_compare_means(comparisons = list(c("Men", "Women")), label = "p.signif",
-                                   paired = F, size = 4, method = "wilcox.test")+
+                                   paired = F, size = 4, method = "wilcox.test", tip.length = 0)+
         scale_y_log10() +
         theme(plot.title = element_text(size = rel(0.8)))
     print(pl)
     pltli[[path]] <- pl
     dfpaths$pathid <- NULL
 }
-ggarrange(plotlist = pltli, ncol = 3, nrow = 1, labels = LETTERS[1:length(pltli)],
+ggarrange(plotlist = pltli, ncol = 4, nrow = 2, labels = LETTERS[1:length(pltli)],
           common.legend = TRUE)  
-ggsave("results/lacteth_pathways.pdf", width = 9, height = 5)
+ggsave("results/pathways/lacteth_pathways.pdf", width = 9, height = 5)
     
