@@ -195,7 +195,7 @@ plot_features_top_pathways <- function(input_path, output_path, top_n=20, nrow=4
                         features = fct_inorder(features),
                         values = values
     )
-    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)[c(2,1)]),
+    colorguide <- case_when("Women" %in% labels ~ c(pal_nejm()(2)),
                             .default = c(pal_nejm()(4)[3:4]))
     comps <- list(c(labels[1], labels[2]))
     pl <- ggplot(df, aes(x=y, y=values))+
