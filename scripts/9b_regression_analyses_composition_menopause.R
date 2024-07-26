@@ -95,7 +95,7 @@ res2 <- as.data.frame(res) %>%
            `m2-q` = p.adjust(`m2-p`, 'fdr')) %>% 
     mutate(across(c(5,9,13), afronden3), # round p values at 3 digits
            across(c(2:4, 6:8, 10:12), afronden2)) # round estimates at 2 digits
-openxlsx::write.xlsx(res2, "results/lm_menopause_metagen.xlsx")
+openxlsx::write.xlsx(res2, "results/lm/lm_menopause_metagen.xlsx")
 
 res3 <- res2 %>% pivot_longer(c(2:16), names_to=c("model", "cat"), names_prefix="m", 
                               names_sep='-', values_to="value") %>% # to have models in long format
@@ -121,10 +121,10 @@ res3 <- res2 %>% pivot_longer(c(2:16), names_to=c("model", "cat"), names_prefix=
              x = "Estimate and 95% CI for postmenopausal status", y = "", color = "", shape = "") + 
         theme_Publication()
 )
-ggsave("results/lm_metagen_menopause.pdf", width = 10, height = 8)
+ggsave("results/lm/lm_metagen_menopause.pdf", width = 10, height = 8)
 
 ## Combine with plot for sex (plot of script 9a)
-# ggarrange(forest_plot_sex, forest_plot_menopause, labels = c("A", "B"), common.legend = TRUE,
-#   legend = "right", ncol = 1)
-# ggsave("results/lm_metagen_sexmenopause.pdf", width=12, height=16)
+ggarrange(forest_plot_sex, forest_plot_menopause, labels = c("A", "B"), common.legend = TRUE,
+  legend = "right", ncol = 1)
+ggsave("results/lm/lm_metagen_sexmenopause.pdf", width=12, height=16)
 
