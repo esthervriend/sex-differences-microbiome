@@ -117,7 +117,7 @@ res3 <- res2 %>% pivot_longer(c(2:16), names_to=c("model", "cat"), names_prefix=
                           geom_vline(aes(xintercept = 0), linewidth = .50, linetype = "dashed") + 
                           geom_errorbarh(aes(xmin = l95, xmax = u95), height = 0.5, 
                                          position = position_dodge(-0.5)) +
-                          scale_x_continuous(breaks = seq(-.8, 0.6, by = 0.2)) +
+                          scale_x_continuous(breaks = seq(-2, 2, by = 1)) +
                           scale_color_nejm() +
                           scale_shape_manual(values = c(1, 16)) +
                           labs(title = "Best predicting microbes for sex",
