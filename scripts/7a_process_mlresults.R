@@ -1,9 +1,10 @@
 ## Process results machine learning
 
 library(tidyverse)
-library(ggplot2)
 library(ggsci)
 library(stringr)
+
+options(scipen=999)
 
 source("scripts/functions.R")
 
@@ -22,9 +23,9 @@ pl3 <- plot_features_tests_top(data_path, path_true, top_n=5, nrow = 1, labels)
 plarr1 <- ggarrange(ggarrange(svg_grob), pl2, pl3,
                     nrow = 3, labels = c("A", "B", "C"), 
                     heights = c(1.2,1.3,0.8))
-ggsave(plarr1, filename = "results/16s_comp_sex.pdf",
+ggsave(plarr1, filename = "results/ml_figures/16s_comp_sex.pdf",
        width = 14, height = 18)
-ggsave(plarr1, filename = "results/16s_comp_sex.png",
+ggsave(plarr1, filename = "results/ml_figures/16s_comp_sex.png",
        width = 14, height = 18)
 
 ## Plot assembled figure composition menopause
@@ -42,7 +43,5 @@ pl3 <- plot_features_tests_top(data_path, path_true, top_n=5, nrow = 1, labels)
 plarr1 <- ggarrange(ggarrange(svg_grob), pl2, pl3,
                     nrow = 3, labels = c("A", "B", "C"), 
                     heights = c(1.2,1.3,0.8))
-ggsave(plarr1, filename = "results/16s_comp_meno.pdf",
-       width = 14, height = 18)
-ggsave(plarr1, filename = "results/16s_comp_meno.png",
-       width = 14, height = 18)
+ggsave(plarr1, filename = "results/ml_figures/16s_comp_meno.pdf", width = 14, height = 18)
+ggsave(plarr1, filename = "results/ml_figures/16s_comp_meno.png", width = 14, height = 18)
