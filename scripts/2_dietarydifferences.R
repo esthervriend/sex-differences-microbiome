@@ -40,6 +40,10 @@ theme_Publication <- function(base_size=14, base_family="sans") {
     
 } 
 
+## Output folder
+resultsfolder <- "results/diet"
+dir.create(resultsfolder, showWarnings = FALSE)
+
 ## Load dataset
 df_new <- rio:: import("data/clinicaldata.RDS")
 
@@ -72,11 +76,6 @@ loadings$Variables <- rownames(loadings)
         scale_color_manual(values = rev(pal_nejm()(2))) +
         scale_fill_manual(values = rev(pal_nejm()(2)), guide = "none") +
         labs(color = "", title = "Sex differences diet")
-        # geom_segment(data = loadings, aes(x = 0, y = 0, xend = (PC1*8), yend = (PC2*8)), 
-        #              arrow = arrow(length = unit(1/2, "picas")),
-        #              color = "black", linewidth = 0.9) +
-        # annotate("text", x = (loadings$PC1*9), y = (loadings$PC2*9),
-        #          label = loadings$Variables)
 )
 ggsave(pcadiet, filename = "results/diet/PCA_diet.pdf",
        width = 5, height = 6)
@@ -131,11 +130,6 @@ loadings$Variables <- rownames(loadings)
         scale_color_manual(values = pal_nejm()(4)[3:4]) +
         scale_fill_manual(values = pal_nejm()(4)[3:4], guide = "none") +
         labs(color = "", title = "Menopausal differences diet")
-        # geom_segment(data = loadings, aes(x = 0, y = 0, xend = (PC1*8), yend = (PC2*8)), 
-        #              arrow = arrow(length = unit(1/2, "picas")),
-        #              color = "black", linewidth = 0.9) +
-        # annotate("text", x = (loadings$PC1*9), y = (loadings$PC2*9),
-        #          label = loadings$Variables)
 )
 ggsave(pcadiet, filename = "results/diet/PCA_diet_menopause.pdf",
        width = 5, height = 6)
