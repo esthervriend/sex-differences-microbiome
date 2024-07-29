@@ -68,15 +68,13 @@ grConvert::convertPicture(file.path(path_true,"Plot_AUC.pdf"), file.path(path_tr
 svg_grob <- svgparser::read_svg(file.path(path_true,"auc.svg"))
 plarr1 <- ggarrange(ggarrange(svg_grob, NULL, nrow = 2, heights = c(2.0,0.3)), pl2, 
                     nrow = 1, widths = c(0.8, 1.3), labels = c("A", "B"))
-plarr2 <- ggarrange(plarr1, 
-                    ggarrange(plotlist = pathli[c(2,1,4,3)], nrow = 1, ncol = 4, labels = LETTERS[3:7]),
-                    nrow = 2, heights = c(1.0, 0.6))
-plarr2b <- ggarrange(svg_grob, pl2, 
-                    ggarrange(plotlist = pathli2[c(2,1,4,3)], nrow = 1, ncol = 4, labels = LETTERS[3:7]),
-                    nrow = 3, heights = c(1.0, 1.2, 1.0), labels = c(LETTERS[1:2], ""))
-ggsave(plarr2b, filename = "results/ml_figures/pathways_sexdiff.pdf",
+pl3 <- plot_features_top_pathways(data_path, path_true, top_n=5, nrow = 1, labels)
+plarr1 <- ggarrange(ggarrange(svg_grob), pl2, pl3,
+                    nrow = 3, labels = c("A", "B", "C"), 
+                    heights = c(1.2,1.3,0.8))
+ggsave(plarr1, filename = "results/ml_figures/pathways_sex.pdf",
        width = 15, height = 20)
-ggsave(plarr2b, filename = "results/ml_figures/pathways_sexdiff.png",
+ggsave(plarr1, filename = "results/ml_figures/pathways_sex.png",
        width = 15, height = 20)
 
 ## Plot assembled figure pathways menopause
