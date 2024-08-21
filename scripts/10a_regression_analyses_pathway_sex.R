@@ -42,7 +42,6 @@ afronden3 <- function(x) return(as.numeric(format(round(x, 3),3)))
 # Load data
 df <- readRDS("data/clinicaldata.RDS")
 tab <- readRDS("data/pathways_filtered.RDS")
-tab <- as.data.frame(t(tab))
 tab$ID <- rownames(tab)
 dfcomplete <- merge(df, tab, by = "ID")
 tax <- readRDS("data/pathway_keys.RDS")
@@ -55,7 +54,7 @@ res <- c()
 for (i in 1:nrow(pred_sex_pathways)) {
     var_name <- pred_sex_pathways$FeatName[i]
     print(var_name) # print name
-    dfcomplete$dep <- dfcomplete[[var_name]]
+    dfcomplete$dep <- scale(dfcomplete[[var_name]])
     dfcomplete$logdep <- log(dfcomplete$dep + 1)
     # inspect distribution
     print(dfcomplete %>% gghistogram("dep", title = str_c(var_name, " - no log"), fill = "royalblue4"))
