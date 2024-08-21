@@ -55,7 +55,7 @@ ggsave(plarr1, filename = "results/ml_figures/comp_menopause.png",
 
 #### Pathways ####
 ## Plot assembled figure pathways sex
-path_true <- 'sex_pathways/output_XGB_class_sex_pathways_2024_03_03__20-18-59'
+path_true <- 'sex_pathways/output_XGB_class_sex_pathways_2024_08_20__22-45-01'
 data_path <- 'sex_pathways/input_data'
 labels <- c("Men", "Women")
 
@@ -78,7 +78,7 @@ ggsave(plarr1, filename = "results/ml_figures/pathways_sex.png",
        width = 15, height = 20)
 
 ## Plot assembled figure pathways menopause
-path_true <- 'menopause_pathways/output_XGB_class_menopause_pathways_2024_03_03__20-28-16'
+path_true <- 'menopause_pathways/output_XGB_class_menopause_pathways_2024_08_20__22-56-07'
 data_path <- 'menopause_pathways/input_data'
 labels <- c("Postmenopausal", "Premenopausal")
 
