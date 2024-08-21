@@ -10,15 +10,16 @@ library(ggpubr)
 df <- readRDS('data/clinicaldata_shotgun.RDS') %>% 
     mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
 pathwaysfilt <- readRDS("data/pathways_filtered.RDS")
-pathwaysofinterest <- c("PPGPPMET-PWY", "PHOSLIPSYN-PWY", "PYRIDOXSYN-PWY", "PWY-5030")
+fi <- rio::import("data/sex_pathways_feature_importance.txt") %>% arrange(-RelFeatImp) %>% slice(1:5)
+pathwaysofinterest <- fi$FeatName
 pathwaysfilt <- pathwaysfilt %>% filter(rownames(.) %in% pathwaysofinterest)
 pyri <- as.data.frame(t(as.matrix(pathwaysfilt)))
 pyri$ID <- rownames(pyri)
-pyri <- pyri %>% dplyr::select(everything(.), "ppGp metabolism" = `PPGPPMET-PWY`,
-                               "pyridoxal 5'−phosphate biosynthesis I" = `PYRIDOXSYN-PWY`,
-                               "superpathway of phospholipid biosynthesis I (bacteria)" = `PHOSLIPSYN-PWY`,
-                               "L−histidine degradation III" = `PWY-5030`)
-
+pyri <- pyri %>% dplyr::select(everything(.),"pyridoxal 5'−phosphate biosynthesis I" = `PYRIDOXSYN-PWY`, 
+                               "ppGp metabolism" = `PPGPPMET-PWY`,
+                               "stachyose degradation" = `PWY-6527`,
+                               "superpathway of glucose and xylose degradation" = `PWY-6901`,
+                               "superpathway of phospholipid biosynthesis I (bacteria)" = `PHOSLIPSYN-PWY`)
 dfpaths <- inner_join(df, pyri, by = "ID")
 dfpaths <- dfpaths %>% mutate(Menopause_Sex = case_when(
     Sex == "Men" & Age < 50 ~ "Men <50",
