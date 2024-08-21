@@ -9,18 +9,17 @@ library(ggpubr)
 ## Clinical data
 df <- readRDS('data/clinicaldata_shotgun.RDS') %>% 
     mutate(Sex = fct_recode(Sex, "Men" = "Male", "Women" = "Female"))
-pathwaysfilt <- readRDS("data/pathways_filtered.RDS")
+pw <- readRDS("data/pathways_filtered.RDS")
 fi <- rio::import("data/sex_pathways_feature_importance.txt") %>% arrange(-RelFeatImp) %>% slice(1:5)
 pathwaysofinterest <- fi$FeatName
-pathwaysfilt <- pathwaysfilt %>% filter(rownames(.) %in% pathwaysofinterest)
-pyri <- as.data.frame(t(as.matrix(pathwaysfilt)))
-pyri$ID <- rownames(pyri)
-pyri <- pyri %>% dplyr::select(everything(.),"pyridoxal 5'−phosphate biosynthesis I" = `PYRIDOXSYN-PWY`, 
+pw <- pw %>% dplyr::select(contains(pathwaysofinterest))
+pw$ID <- rownames(pw)
+pw <- pw %>% dplyr::select(everything(.),"pyridoxal 5'−phosphate biosynthesis I" = `PYRIDOXSYN-PWY`, 
                                "ppGp metabolism" = `PPGPPMET-PWY`,
                                "stachyose degradation" = `PWY-6527`,
                                "superpathway of glucose and xylose degradation" = `PWY-6901`,
                                "superpathway of phospholipid biosynthesis I (bacteria)" = `PHOSLIPSYN-PWY`)
-dfpaths <- inner_join(df, pyri, by = "ID")
+dfpaths <- inner_join(df, pw, by = "ID")
 dfpaths <- dfpaths %>% mutate(Menopause_Sex = case_when(
     Sex == "Men" & Age < 50 ~ "Men <50",
     Sex == "Men" & Age >= 50 ~ "Men >=50",
@@ -33,7 +32,7 @@ Menopause_Sex = fct_relevel(Menopause_Sex, "Men <50", after = 0L)
 )
 
 pathli <- list()
-for(path in names(dfpaths)[59:62]){
+for(path in names(dfpaths)[59:63]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     lab_y <- log10(max(dfpaths$pathid))*1.05
@@ -58,13 +57,13 @@ for(path in names(dfpaths)[59:62]){
     pathli[[path]] <- pl
     dfpaths$pathid <- NULL
 }
-ggarrange(plotlist = pathli, ncol = 2, nrow = 2, labels = LETTERS[1:4])
-ggsave("results/pathways/diffpathways_menopause.pdf", width = 10, height = 12)
-ggsave("results/pathways/diffpathways_menopause.png", width = 10, height = 12)
+ggarrange(plotlist = pathli, ncol = 2, nrow = 3, labels = LETTERS[1:5])
+ggsave("results/pathways/diffpathways_menopause.pdf", width = 10, height = 16)
+ggsave("results/pathways/diffpathways_menopause.png", width = 10, height = 16)
 
 dfpaths$Sex <- fct_rev(dfpaths$Sex)
 pathli2 <- list()
-for(path in names(dfpaths)[59:62]){
+for(path in names(dfpaths)[59:63]){
     dfpaths$pathid <- dfpaths[[path]]
     print(path)
     lab_y <- log10(max(dfpaths$pathid))*1.2
