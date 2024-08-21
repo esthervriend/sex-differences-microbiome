@@ -1,4 +1,4 @@
-# create XGB input files for male/female model
+# create XGB input files for pred eth/timepoint from pathways
 
 library(dplyr)
 library(stringr)
@@ -41,38 +41,35 @@ df <- readRDS('data/clinicaldata.RDS') %>%
         Sex == "Female" ~ 0,
         Sex == "Male" ~ 1
     ))
-pathways <- rio::import("data/humann/merged/pathway_abundance_cpm_unstratified.txt")
-pathways2 <- pathways %>% select(1, !(contains("Abundance-RPKs") | contains("Coverage")))
-colnames(pathways2) <- c(colnames(pathways2)[1], str_replace(colnames(pathways2)[2:298], "_T1_Abundance", ""))
+pathways <- rio::import("data/humann/merged_pathway_renorm_unstratified.tsv")
+rownames(pathways) <- pathways$`# Pathway`
+pathways$`# Pathway` <- NULL
+pathways <- as.data.frame(t(as.matrix(pathways)))
+rownames(pathways) <- str_remove(rownames(pathways), "_T1_Abundance-CPM")
 
 # Short labeling pathways
-genes <- pathways2$`# Gene Family`
-geneskey <- str_split(genes, ": ", n = 2, simplify = TRUE)
-colnames(geneskey) <- c("key","label")
-geneskey <- as.data.frame(geneskey)
+paths <- colnames(pathways)
+pathskey <- str_split(paths, ": ", n = 2, simplify = TRUE)
+colnames(pathskey) <- c("key","label")
+pathskey <- as.data.frame(pathskey)
 print('Check if any keys are duplicated:')
-any(duplicated(geneskey$key)) # unique keys
-rownames(pathways2) <- geneskey$key
-
-# Remove zero abundance pathways
-print('Remove zero abundance pathways..')
-names(pathways2)
-pathways2 <- pathways2 %>% filter(!`# Gene Family` %in% c("UNMAPPED", "UNINTEGRATED"))
-pathways2[,1] <- NULL
+any(duplicated(pathskey$key)) # FALSE = unique keys
+colnames(pathways) <- pathskey$key
+saveRDS(pathskey, "data/pathway_keys.RDS")
 
 # inspect abundance
 print('Select pathways with abundance >50 cpm')
-sums <- as.data.frame(rowSums(pathways2))
+sums <- as.data.frame(colSums(pathways))
 colnames(sums) <- "prev"
 sums <- sums %>% mutate(prev = prev / 297)
-# tk <- apply(pathways2, 1, function(x) sum(x > 50) > (0.3*length(x)))
-sumsprev <- sums %>% filter(prev > 50) %>% print()
-pathwaysprev <- rownames(sumsprev)
-
-# select pathways
+hist(sums$prev)
+tk <- apply(pathways, 2, function(x) sum(x > 200) > (0.3*length(x)))
+summary(tk)
+# sumsprev <- sums %>% filter(prev > 50) %>% print()
+# pathwaysprev <- rownames(sumsprev)
 print('Select pathways..')
-pathways2 <- pathways2 %>% filter(rownames(.) %in% pathwaysprev)
-pathways2 <- t(as.matrix(pathways2))
+pathways2 <- pathways[,tk] # select pathways
+rownames(pathways2) <- rownames(pathways)
 saveRDS(pathways2, "data/pathways_filtered.RDS")
 
 # Put clinical data and microbiome data in same sequence of IDs
@@ -89,8 +86,8 @@ rownames(pathways2)
 
 # make input data
 path <- 'sex_pathways'
-dir.create(path)
-dir.create("sex_pathways/input_data")
+dir.create(path, showWarnings = FALSE)
+dir.create("sex_pathways/input_data", showWarnings = FALSE)
 write_data(pathways2, file.path(path, 'input_data'))
 y <- as.data.frame(df$Sex)
 y
@@ -106,40 +103,39 @@ df$MenopauseYn <- case_when(
 summary(as.factor(df$MenopauseYn))
 df <- df %>% dplyr::select(ID, MenopauseYn)
 dim(df)
-pathways <- rio::import("data/humann/merged/pathway_abundance_cpm_unstratified.txt")
-pathways2 <- pathways %>% select(1, !(contains("Abundance-RPKs") | contains("Coverage")))
-colnames(pathways2) <- c(colnames(pathways2)[1], str_replace(colnames(pathways2)[2:298], "_T1_Abundance", ""))
+pathways <- rio::import("data/humann/merged_pathway_renorm_unstratified.tsv")
+rownames(pathways) <- pathways$`# Pathway`
+pathways$`# Pathway` <- NULL
+pathways <- as.data.frame(t(as.matrix(pathways)))
+rownames(pathways) <- str_remove(rownames(pathways), "_T1_Abundance-CPM")
 
 # Short labeling pathways
-genes <- pathways2$`# Gene Family`
-geneskey <- str_split(genes, ": ", n = 2, simplify = TRUE)
-colnames(geneskey) <- c("key","label")
-geneskey <- as.data.frame(geneskey)
-any(duplicated(geneskey$key)) # unique keys
-rownames(pathways2) <- geneskey$key
-pathways2[,1] <- NULL
-
-# Remove zero abundance pathways
-print('Remove zero abundance pathways..')
-pathways2 <- pathways2 %>% filter(!rownames(.) %in% c("UNMAPPED", "UNINTEGRATED")) 
-# filter(rowSums(.) != 0)
+paths <- colnames(pathways)
+pathskey <- str_split(paths, ": ", n = 2, simplify = TRUE)
+colnames(pathskey) <- c("key","label")
+pathskey <- as.data.frame(pathskey)
+print('Check if any keys are duplicated:')
+any(duplicated(pathskey$key)) # unique keys
+colnames(pathways) <- pathskey$key
 
 # inspect abundance
 print('Select pathways with abundance >50 cpm')
-sums <- as.data.frame(rowSums(pathways2))
+sums <- as.data.frame(colSums(pathways))
 colnames(sums) <- "prev"
 sums <- sums %>% mutate(prev = prev / 297)
-sumsprev <- sums %>% filter(prev > 50) %>% print()
-pathwaysprev <- rownames(sumsprev)
-
-# select pathways
+hist(sums$prev)
+tk <- apply(pathways, 2, function(x) sum(x > 200) > (0.3*length(x)))
+summary(tk)
+# sumsprev <- sums %>% filter(prev > 50) %>% print()
+# pathwaysprev <- rownames(sumsprev)
 print('Select pathways..')
-pathways2 <- pathways2 %>% filter(rownames(.) %in% pathwaysprev)
-pathways2 <- t(as.matrix(pathways2))
+pathways2 <- pathways[,tk] # select pathways
+rownames(pathways2) <- rownames(pathways)
 
 # Put clinical data and microbiome data in same sequence of IDs
 print('Put clinical data in same sequence as pathways..')
 pathways2 <- pathways2[which(rownames(pathways2) %in% df$ID),]
+dim(pathways2)
 df <- df[match(rownames(pathways2), df$ID), ]
 
 # check that outcome subject ids match metabolite subjects ids
@@ -150,8 +146,8 @@ rownames(pathways2)
 
 # make input data
 path <- 'menopause_pathways'
-dir.create(path)
-dir.create("menopause_pathways/input_data")
+dir.create(path, showWarnings = FALSE)
+dir.create("menopause_pathways/input_data", showWarnings = FALSE)
 write_data(pathways2, file.path(path, 'input_data'))
 y <- as.data.frame(df$MenopauseYn)
 y
